@@ -16,7 +16,7 @@ A simple python script to automate attendance marking on nitc eduserver.
 ## Usage
 
 1. Solo: Enter your eduserver login details in `attendance-solo.py`, execute using `python3 attendance-solo.py` and, if you're doing it on a cloud server, never worry about being excused ever again. :smirk:
-2. Batch: If you're the benevolent chunk who decided to host the script on their server or physical machine for all your friends, fill in their login details as a list in `attendance-batch.py` and execute as mentioned.
+2. Batch: If you're the benevolent chunk who selflessly volunteered to host the script on your server or physical machine for all your friends 😜, fill in their login details as a list in `attendance-batch.py` and execute as mentioned.
 
 **Note:** You have to execute it before the 1st class of the day starts (can be the previous night) for it to work.
 

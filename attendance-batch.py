@@ -6,8 +6,8 @@ import os
 import datetime
 import time
 
-# fill eduserver login details here
-logins = [("username1, password1"), ("username2", "password2")]
+# fill eduserver login details here in the form ("username", "password")
+logins = [("username", "password"), ("username", "password")]
 
 i = 0
 
@@ -49,6 +49,7 @@ def init():
         else:
             if x.hour==7 and x.minute==40:
                 i = 0
+                print(x.strftime("%c"), file=open("log", "w"))
             elif x.hour==18:
                 time.sleep(48600)
             elif ((7 <= x.hour < 10 and 55 <= x.minute <= 59) or
@@ -84,14 +85,14 @@ def mark():
                     break
                 except:
                     if alive:
-                        print("Attendance already marked?", file=open("log", "a"))
+                        print(f"Attendance already marked for {logins[j][0]}?", file=open("log", "a"))
                         j += 1
                         break
                     else:
-                        print("link not here yet (no class?:grin:)", file=open("log", "a"))
+                        print(f"link not here yet (no class? at {x.hour}:{x.minute}:{x.second})", file=open("log", "a"))
                         time.sleep(60)
             except:
-                print("no links here lol", file=open("log", "a"))
+                print(f"no links here at {x.hour}:{x.minute}:{x.second} lol", file=open("log", "a"))
                 time.sleep(60)
         else:
             break

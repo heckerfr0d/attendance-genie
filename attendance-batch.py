@@ -7,8 +7,7 @@ import datetime
 import time
 
 # fill eduserver login details here
-logins = [("B190513CS", "Nims@123"), ("B190420CS", "Hanna@2019"), ("B190439CS", "Midhun@2000"), ("B190547CS", "Pokemonmaster@007"),
-            ("B190468CS", "#CelluB190468CS"), ("B190534CS", "Hed1fhecker@"), ("B190837CS", "ShzHck*654"), ("B190441CS", "Muthoos*1")]
+logins = [("username1, password1"), ("username2", "password2")]
 
 i = 0
 

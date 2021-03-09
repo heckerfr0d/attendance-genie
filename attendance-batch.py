@@ -7,7 +7,7 @@ import datetime
 import time
 
 # fill eduserver login details here in the form ("username", "password")
-logins = [("username", "password"), ("username", "password")]
+logins = [("username", "password")]
 
 i = 0
 
@@ -56,7 +56,7 @@ def init():
             ( 8 <= x.hour <  10 and 0 <= x.minute <= 6) or
             (10 <= x.hour <= 12 and 0 <= x.minute <= 16) or
             (12 <= x.hour <= 16 and 55<= x.minute <= 59) or
-            (13 <= x.hour <= 17 and 0 <= x.minute <= 15)):
+            (13 <= x.hour <= 17 and 0 <= x.minute <= 6)):
                 mark()
                 time.sleep(2400)
         time.sleep(60)
@@ -74,7 +74,7 @@ def mark():
             ( 8 <= x.hour <  10 and 0 <= x.minute <= 6) or
             (10 <= x.hour <= 12 and 0 <= x.minute <= 16) or
             (12 <= x.hour <= 16 and 55<= x.minute <= 59) or
-            (13 <= x.hour <= 17 and 0 <= x.minute <= 17)):
+            (13 <= x.hour <= 17 and 0 <= x.minute <= 6)):
             br.open("https://eduserver.nitc.ac.in/calendar/view.php?view=day")
             try:
                 br.follow_link(url_regex="https://eduserver\.nitc\.ac\.in/mod/attendance/view\.php*", nr=i)

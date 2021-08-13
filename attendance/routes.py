@@ -1,9 +1,6 @@
 from flask import current_app as app
 from flask import render_template, request, make_response
-import aiohttp
-import asyncio
 from . import db
-from .utilities import crawl
 
 
 @app.route('/', methods=['GET', 'POST'])
@@ -14,11 +11,6 @@ def main():
         return render_template('main.html', extra='I got u bro')
     else:
         return render_template('main.html', extra='We already got u lol')
-
-@app.route('/crawl')
-def populate():
-    asyncio.run(crawl())
-    return make_response({"crawling":"success"}, 200)
 
 
 @app.errorhandler(404)

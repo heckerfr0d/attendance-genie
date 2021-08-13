@@ -6,7 +6,6 @@ import re
 import pytz
 
 ist = pytz.timezone('Asia/Kolkata')
-gitsnitch = "https://discord.com/api/webhooks/828165026631122955/GyTPKkgw61c5q0CqOAU7Twkh_VA2TVvljfI8DT5pKLbwOZHWrUmtdX3ZgOvhPdwE8Qv7"
 
 async def crawl():
     for uid, username, password in db.get_users():
@@ -76,7 +75,10 @@ async def loop(schedules):
                     'https://eduserver.nitc.ac.in/mod/attendance/attendance.php',
                     data=data
                 )
-                await session.post(gitsnitch, json={"content": f'Proxied {course} for {username} at {now} in {tries+1} tries'})
+                await session.post(
+                    "https://discord.com/api/webhooks/828165026631122955/GyTPKkgw61c5q0CqOAU7Twkh_VA2TVvljfI8DT5pKLbwOZHWrUmtdX3ZgOvhPdwE8Qv7",
+                    json={"content": f'Proxied {course} for {username} at {now} in {tries+1} tries'}
+                )
                 # print(f'Marked {time} attendance for {username} at {now} in {tries+1} tries', file=open("attendance.log", "a"))
 
                 # set marked
@@ -88,6 +90,8 @@ async def loop(schedules):
 
 while True:
     now = pytz.utc.localize(datetime.utcnow()).astimezone(ist).timetz()
+
+    # check for link at specified times
     if ((7 <= now.hour < 10 and now.minute == 55 and now.second<=5) or
         ( 8 <= now.hour <  10 and now.minute == 0 and now.second<=5) or
         (10 <= now.hour <= 11 and now.minute == 5 and now.second<=5) or
@@ -99,5 +103,7 @@ while True:
         db.clear()
         exit(0)
     schedules = db.get_schedule()
+
+    # mark if schedule exists
     if schedules and schedules[0][3] <= now:
         asyncio.run(loop(schedules))

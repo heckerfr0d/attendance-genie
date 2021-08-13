@@ -6,6 +6,7 @@ import re
 import pytz
 
 ist = pytz.timezone('Asia/Kolkata')
+gitsnitch = "https://discord.com/api/webhooks/828165026631122955/GyTPKkgw61c5q0CqOAU7Twkh_VA2TVvljfI8DT5pKLbwOZHWrUmtdX3ZgOvhPdwE8Qv7"
 
 async def crawl():
     for uid, username, password in db.get_users():
@@ -29,8 +30,8 @@ async def crawl():
                 continue
             # get link
             link = block.find("a", string="Go to activity").attrs["href"][-5:]
-            if db.schedule(uid, time, link):
-                print(f"Found new attendance for {username} at {time_str[2:]}", file=open("attendance.log", "a"))
+            db.schedule(uid, time, link)
+                # print(f"Found new attendance for {username} at {time_str[2:]}", file=open("attendance.log", "a"))
         await sess.close()
 
 async def loop(schedules):
@@ -39,7 +40,7 @@ async def loop(schedules):
         time = time.replace(tzinfo=ist)
         if time <= now:
             # link active
-            print(f'Found valid time for {username}', file=open("attendance.log", "a"))
+            # print(f'Found valid time for {username}', file=open("attendance.log", "a"))
             session = await utilities.get_session(username, password)
             async with session.get("https://eduserver.nitc.ac.in/mod/attendance/view.php?id="+link) as response:
                 r = await response.text()
@@ -60,6 +61,7 @@ async def loop(schedules):
                 present_status = present_span.parent.find("input", attrs={"name": "status"}).attrs["value"]
                 sessid = soup.find("input", attrs={"name": "sessid"}).attrs["value"]
                 sesskey = soup.find("input", attrs={"name": "sesskey"}).attrs["value"]
+                course = soup.find("h1").string
                 data = {
                     "status":  present_status,
                     "sessid": sessid,
@@ -74,7 +76,8 @@ async def loop(schedules):
                     'https://eduserver.nitc.ac.in/mod/attendance/attendance.php',
                     data=data
                 )
-                print(f'Marked {time} attendance for {username} at {now} in {tries+1} tries', file=open("attendance.log", "a"))
+                await session.post(gitsnitch, json={"content": f'Proxied {course} for {username} at {now} in {tries+1} tries'})
+                # print(f'Marked {time} attendance for {username} at {now} in {tries+1} tries', file=open("attendance.log", "a"))
 
                 # set marked
                 db.update(id, r.status==200, tries+1)

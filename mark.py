@@ -34,7 +34,7 @@ async def crawl():
         await sess.close()
 
 async def loop(schedules):
-    for id, username, password, time, link, tries in schedules:
+    for id, username, password, disco, time, link, tries in schedules:
         now = pytz.utc.localize(datetime.utcnow()).astimezone(ist).timetz()
         time = time.replace(tzinfo=ist)
         if time <= now:
@@ -77,7 +77,7 @@ async def loop(schedules):
                 )
                 await session.post(
                     "https://discord.com/api/webhooks/828165026631122955/GyTPKkgw61c5q0CqOAU7Twkh_VA2TVvljfI8DT5pKLbwOZHWrUmtdX3ZgOvhPdwE8Qv7",
-                    json={"content": f'Proxied {course} for {username} at {now} in {tries+1} tries'}
+                    json={"content": f'Proxied {course} for <@{disco}>({username}) at {now} in {tries+1} tries'}
                 )
                 # print(f'Marked {time} attendance for {username} at {now} in {tries+1} tries', file=open("attendance.log", "a"))
 

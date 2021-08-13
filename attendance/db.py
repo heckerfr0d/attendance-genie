@@ -22,7 +22,7 @@ def add_user(username, password):
 # get all unmarked attendance
 def get_schedule():
     cur = conn.cursor()
-    cur.execute("SELECT s.id, u.username, u.password, s.time, s.link, s.tries FROM schedule s, users u WHERE (s.uid=u.id and s.tries<3 and s.marked=FALSE) ORDER BY time")
+    cur.execute("SELECT s.id, u.username, u.password, u.disco, s.time, s.link, s.tries FROM schedule s, users u WHERE (s.uid=u.id and s.tries<3 and s.marked=FALSE) ORDER BY time")
     return cur.fetchall()
 
 # add to schedule

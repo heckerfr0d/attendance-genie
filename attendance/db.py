@@ -9,10 +9,10 @@ def get_users():
     return cur.fetchall()
 
 # new signup yey
-def add_user(username, password):
+def add_user(username, password, disco=None):
     try:
         cur = conn.cursor()
-        cur.execute("INSERT INTO users (username, password) VALUES (%s, %s)", (username, password))
+        cur.execute("INSERT INTO users (username, password, disco) VALUES (%s, %s, %s)", (username, password, disco))
         conn.commit()
         cur.close()
         return True

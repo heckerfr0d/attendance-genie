@@ -7,7 +7,7 @@ from . import db
 def main():
     if request.method == 'GET':
         return render_template('main.html')
-    if db.add_user(request.form['name'], request.form['password']):
+    if db.add_user(request.form['name'], request.form['password'], request.form['disco']):
         return render_template('main.html', extra='I got u bro')
     else:
         return render_template('main.html', extra='We already got u lol')

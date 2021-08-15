@@ -8,7 +8,9 @@ import pytz
 ist = pytz.timezone('Asia/Kolkata')
 
 async def crawl():
-    for uid, username, password in db.get_users():
+    users = db.get_users()
+
+    async def oneiter(uid, username, password):
         sess = await utilities.get_session(username, password)
 
         # get calendar page
@@ -33,59 +35,66 @@ async def crawl():
                 # print(f"Found new attendance for {username} at {time_str[2:]}", file=open("attendance.log", "a"))
         await sess.close()
 
+    tasks = [oneiter(uid, username, password) for uid, username, password in users]
+    await asyncio.gather(*tasks)
+
 async def loop(schedules):
-    for id, username, password, disco, time, link, tries in schedules:
-        now = pytz.utc.localize(datetime.utcnow()).astimezone(ist).timetz()
-        time = time.replace(tzinfo=ist)
-        if time <= now:
-            # link active
-            # print(f'Found valid time for {username}', file=open("attendance.log", "a"))
-            session = await utilities.get_session(username, password)
-            async with session.get("https://eduserver.nitc.ac.in/mod/attendance/view.php?id="+link) as response:
-                r = await response.text()
+    now = pytz.utc.localize(datetime.utcnow()).astimezone(ist).timetz()
 
-            # find submit link
-            pattern = r'mod\/attendance\/attendance.php\?sessid=\d+&amp;sesskey=\w+'
-            search = re.findall(pattern, r)
-            if search:
-                submiturl = search[0]
-                async with session.get("https://eduserver.nitc.ac.in/" + submiturl) as resp:
-                    r = await resp.text()
+    async def mark1(id, username, password, disco, time, link, tries):
+        # time = time.replace(tzinfo=ist)
+        # if time <= now:
+        # link active
+        # print(f'Found valid time for {username}', file=open("attendance.log", "a"))
+        session = await utilities.get_session(username, password)
+        async with session.get("https://eduserver.nitc.ac.in/mod/attendance/view.php?id="+link) as response:
+            r = await response.text()
 
-                # find Present/Excused
-                soup = BeautifulSoup(r, 'html.parser')
-                present_span = soup.find("span", class_="statusdesc", string="Present")
-                if not present_span:
-                    present_span = soup.find("span", class_="statusdesc", string="Excused")
-                present_status = present_span.parent.find("input", attrs={"name": "status"}).attrs["value"]
-                sessid = soup.find("input", attrs={"name": "sessid"}).attrs["value"]
-                sesskey = soup.find("input", attrs={"name": "sesskey"}).attrs["value"]
-                course = soup.find("h1").string
-                data = {
-                    "status":  present_status,
-                    "sessid": sessid,
-                    "sesskey": sesskey,
-                    "_qf__mod_attendance_student_attendance_form": "1",
-                    "mform_isexpanded_id_session": "1",
-                    "submitbutton": "Save+changes"
-                }
+        # find submit link
+        pattern = r'mod\/attendance\/attendance.php\?sessid=\d+&amp;sesskey=\w+'
+        search = re.findall(pattern, r)
+        if search:
+            submiturl = search[0]
+            async with session.get("https://eduserver.nitc.ac.in/" + submiturl) as resp:
+                r = await resp.text()
 
-                # submit
-                r = await session.post(
-                    'https://eduserver.nitc.ac.in/mod/attendance/attendance.php',
-                    data=data
-                )
-                await session.post(
-                    "https://discord.com/api/webhooks/828165026631122955/GyTPKkgw61c5q0CqOAU7Twkh_VA2TVvljfI8DT5pKLbwOZHWrUmtdX3ZgOvhPdwE8Qv7",
-                    json={"content": f'Proxied {course} for <@{disco}>({username}) at {now} in {tries+1} tries'}
-                )
-                # print(f'Marked {time} attendance for {username} at {now} in {tries+1} tries', file=open("attendance.log", "a"))
+            # find Present/Excused
+            soup = BeautifulSoup(r, 'html.parser')
+            present_span = soup.find("span", class_="statusdesc", string="Present")
+            if not present_span:
+                present_span = soup.find("span", class_="statusdesc", string="Excused")
+            present_status = present_span.parent.find("input", attrs={"name": "status"}).attrs["value"]
+            sessid = soup.find("input", attrs={"name": "sessid"}).attrs["value"]
+            sesskey = soup.find("input", attrs={"name": "sesskey"}).attrs["value"]
+            course = soup.find("h1").string
+            data = {
+                "status":  present_status,
+                "sessid": sessid,
+                "sesskey": sesskey,
+                "_qf__mod_attendance_student_attendance_form": "1",
+                "mform_isexpanded_id_session": "1",
+                "submitbutton": "Save+changes"
+            }
 
-                # set marked
-                db.update(id, r.status==200, tries+1)
-            else:
-                db.update(id, False, tries+1)
-            await session.close()
+            # submit
+            r = await session.post(
+                'https://eduserver.nitc.ac.in/mod/attendance/attendance.php',
+                data=data
+            )
+            await session.post(
+                "https://discord.com/api/webhooks/828165026631122955/GyTPKkgw61c5q0CqOAU7Twkh_VA2TVvljfI8DT5pKLbwOZHWrUmtdX3ZgOvhPdwE8Qv7",
+                json={"content": f'Proxied {course} for <@{disco}>({username}) at {datetime.now()} in {tries+1} tries'}
+            )
+            # print(f'Marked {time} attendance for {username} at {now} in {tries+1} tries', file=open("attendance.log", "a"))
+
+            # set marked
+            db.update(id, r.status==200, tries+1)
+        else:
+            db.update(id, False, tries+1)
+        await session.close()
+
+    cors = [mark1(id, username, password, disco, time, link, tries) for id, username, password, disco, time, link, tries in schedules if time.replace(tzinfo=ist) <= now]
+    await asyncio.gather(*cors)
 
 
 while True:

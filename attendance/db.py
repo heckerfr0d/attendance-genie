@@ -8,6 +8,11 @@ def get_users():
     cur.execute("SELECT id, username, password FROM users")
     return cur.fetchall()
 
+def dupeUser(username):
+    cur = conn.cursor()
+    cur.execute("SELECT username FROM users WHERE username=%s", (username,))
+    return cur.fetchone()
+
 # new signup yey
 def add_user(username, password, disco=None):
     try:
@@ -36,6 +41,11 @@ def schedule(uid, time, link):
         return True
     except:
         return False
+
+def schedExists(sid):
+    cur = conn.cursor()
+    cur.execute("SELECT id FROM schedule WHERE id=%s", (sid,))
+    return cur.fetchone()
 
 # clear schedule
 def clear():

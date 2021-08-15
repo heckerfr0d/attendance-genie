@@ -31,7 +31,8 @@ async def crawl():
                 continue
             # get link
             link = block.find("a", string="Go to activity").attrs["href"][-5:]
-            db.schedule(uid, time, link)
+            if not db.schedExists(str(uid)+link):
+                db.schedule(uid, time, link)
                 # print(f"Found new attendance for {username} at {time_str[2:]}", file=open("attendance.log", "a"))
         await sess.close()
 
@@ -114,5 +115,5 @@ while True:
     schedules = db.get_schedule()
 
     # mark if schedule exists
-    if schedules and schedules[0][3] <= now:
+    if schedules and schedules[0][3].replace(tzinfo=ist) <= now:
         asyncio.run(loop(schedules))

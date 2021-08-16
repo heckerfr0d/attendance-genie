@@ -4,8 +4,10 @@ from datetime import datetime, timedelta
 from bs4 import BeautifulSoup
 import re
 import pytz
+import os
 
 ist = pytz.timezone('Asia/Kolkata')
+webHook = os.env.get("WEBHOOK")
 
 async def crawl():
     users = db.get_users()
@@ -83,8 +85,8 @@ async def loop(schedules):
                 data=data
             )
             await session.post(
-                "https://discord.com/api/webhooks/828165026631122955/GyTPKkgw61c5q0CqOAU7Twkh_VA2TVvljfI8DT5pKLbwOZHWrUmtdX3ZgOvhPdwE8Qv7",
-                json={"content": f'Proxied {course} for <@{disco}>({username}) at {datetime.now()} in {tries+1} tries'}
+                webHook,
+                json={"content": f'Proxied {course} for <@{disco}> ({username}) at {datetime.now()} in {tries+1} tries'}
             )
             # print(f'Marked {time} attendance for {username} at {now} in {tries+1} tries', file=open("attendance.log", "a"))
 
@@ -102,18 +104,20 @@ while True:
     now = pytz.utc.localize(datetime.utcnow()).astimezone(ist).timetz()
 
     # check for link at specified times
-    if ((7 <= now.hour < 10 and now.minute == 55 and now.second<=5) or
+    if ((7 <= now.hour < 10 and now.minute == 50 and now.second<=5) or
+    	(7 <= now.hour < 10 and now.minute == 55 and now.second<=5) or
         ( 8 <= now.hour <  10 and now.minute == 0 and now.second<=5) or
         (10 <= now.hour <= 11 and now.minute == 5 and now.second<=5) or
         (10 <= now.hour <= 11 and now.minute == 10 and now.second<=5) or
+        (10 <= now.hour <= 11 and now.minute == 15 and now.second<=5) or
         (12 <= now.hour <= 16 and now.minute == 55 and now.second<=5) or
         (13 <= now.hour <= 17 and now.minute == 0 and now.second<=5)):
-        asyncio.run(crawl())
-    elif now.hour == 18:
+    	asyncio.run(crawl())
+    if now.hour == 18:
         db.clear()
         exit(0)
     schedules = db.get_schedule()
 
     # mark if schedule exists
-    if schedules and schedules[0][3].replace(tzinfo=ist) <= now:
+    if schedules and schedules[0][4].replace(tzinfo=ist) <= now:
         asyncio.run(loop(schedules))

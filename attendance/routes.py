@@ -6,12 +6,12 @@ from . import db
 @app.route('/', methods=['GET', 'POST'])
 def main():
     if request.method == 'GET':
-        return render_template('main.html')
+        return render_template('main.html', extra=f'Currently overseeing {len(db.get_users())} users 😎️')
     if not db.dupeUser(request.form['username']):
-        db.add_user(request.form['name'], request.form['password'], request.form['disco'])
-        return render_template('main.html', extra='I got u bro')
+        db.add_user(request.form['name'], request.form['password'], request.form.get('disco'))
+        return render_template('main.html', extra='I got u bro 🫂️')
     else:
-        return render_template('main.html', extra='We already got u lol')
+        return render_template('main.html', extra='We already got u lol :P')
 
 
 @app.errorhandler(404)

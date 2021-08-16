@@ -1,23 +1,25 @@
 
-# eduserver-attendance-marker
+# Attendance Genie
 
-I'll edit this later :)
+Sick of losing attendance because of poorly scheduled links or eduserver being sluggish?  
+Wish you didn't have to worry about those annoying attendance links?  
 
-A simple python script to automate attendance marking on nitc eduserver.
+<img alt="Your wish is our command ;)" src="https://memegenerator.net/img/instances/54975493.jpg" width=400>
 
-## Requirements
+Simply provide your eduserver login details at https://attendance-genie.herokuapp.com and leave the rest to us ✌️  
+Follow [our attendance channel](https://discord.gg/xkQddAEECx) on discord to get pinged when your attendance is marked (if you provided the optional discord ID).  
+Your discord ID is the 18 digit number you get when you tag yourself in a discord text channel with a `\` preceding the tag.  
 
-pass
+If, for some obscure reason you don't trust us with your eduserver login details (lol), you can always host the whole thing yourself (it's easy dw :P)  
+The flask app is already heroku ready and for the marking part all you have to do is run:
 
-## Installation
+```bash
+pip3 install -r requirements.txt
+python3 mark.py
+```
 
-pass
+Finding a VPS to host it is something I'll leave to you 😁  
 
-## Usage
+**Smol disclaimer**: Very rarely it can happen that the script runs into some error and fails to mark your attendance... Please be vigilant for at least a week after joining the club and report any bugs/discrepencies found.  
 
-pass
-
-## Disclaimer
-
-This script checks for attendance slots every minute in the specified intervals. Since this is kinda wasteful, any idea to improve on this algorithm is welcome. Also, use at your own risk etc.
-For any contribution to this project, open an issue or submit a PR or directly contact me :innocent:
+For contributions of any kind feel free to open an issue or submit a PR or even directly contact me :innocent:

@@ -7,7 +7,7 @@ import pytz
 import os
 
 ist = pytz.timezone('Asia/Kolkata')
-webHook = os.env.get("WEBHOOK")
+webHook = os.getenv('WEBHOOK')
 
 async def crawl():
     users = db.get_users()

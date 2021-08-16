@@ -1,0 +1,6 @@
+flask
+gunicorn
+aiohttp
+asyncio
+beautifulsoup4
+psycopg2

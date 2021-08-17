@@ -99,25 +99,25 @@ async def loop(schedules):
     cors = [mark1(id, username, password, disco, time, link, tries) for id, username, password, disco, time, link, tries in schedules if time.astimezone(ist) <= now]
     await asyncio.gather(*cors)
 
+if __name__=="__main__":
+    while True:
+        now = pytz.utc.localize(datetime.utcnow()).astimezone(ist).timetz()
 
-while True:
-    now = pytz.utc.localize(datetime.utcnow()).astimezone(ist).timetz()
+        # check for link at specified times
+        if ((7 <= now.hour < 10 and now.minute == 50 and now.second<=5) or
+            (7 <= now.hour < 10 and now.minute == 55 and now.second<=5) or
+            ( 8 <= now.hour <  10 and now.minute == 0 and now.second<=5) or
+            (10 <= now.hour <= 11 and now.minute == 5 and now.second<=5) or
+            (10 <= now.hour <= 11 and now.minute == 10 and now.second<=5) or
+            (10 <= now.hour <= 11 and now.minute == 15 and now.second<=5) or
+            (12 <= now.hour <= 16 and now.minute == 55 and now.second<=5) or
+            (13 <= now.hour <= 17 and now.minute == 0 and now.second<=5)):
+            asyncio.run(crawl())
+        if now.hour == 18:
+            db.clear()
+            exit(0)
+        schedules = db.get_schedule()
 
-    # check for link at specified times
-    if ((7 <= now.hour < 10 and now.minute == 50 and now.second<=5) or
-    	(7 <= now.hour < 10 and now.minute == 55 and now.second<=5) or
-        ( 8 <= now.hour <  10 and now.minute == 0 and now.second<=5) or
-        (10 <= now.hour <= 11 and now.minute == 5 and now.second<=5) or
-        (10 <= now.hour <= 11 and now.minute == 10 and now.second<=5) or
-        (10 <= now.hour <= 11 and now.minute == 15 and now.second<=5) or
-        (12 <= now.hour <= 16 and now.minute == 55 and now.second<=5) or
-        (13 <= now.hour <= 17 and now.minute == 0 and now.second<=5)):
-    	asyncio.run(crawl())
-    if now.hour == 18:
-        db.clear()
-        exit(0)
-    schedules = db.get_schedule()
-
-    # mark if schedule exists
-    if schedules and schedules[0][4].astimezone(ist) <= now:
-        asyncio.run(loop(schedules))
+        # mark if schedule exists
+        if schedules and schedules[0][4].astimezone(ist) <= now:
+            asyncio.run(loop(schedules))

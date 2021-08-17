@@ -8,12 +8,14 @@ import os
 
 ist = pytz.timezone('Asia/Kolkata')
 webHook = os.getenv('WEBHOOK')
+submit = re.compile(r'mod\/attendance\/attendance.php\?sessid=(\d{5})&amp;sesskey=(\w{10})')
+sessions = {}
 
 async def crawl():
     users = db.get_users()
 
     async def oneiter(uid, username, password):
-        sess = await utilities.get_session(username, password)
+        sess = sessions[uid] if not utilities.expired(sessions[uid]) else await utilities.get_session(username, password)
 
         # get calendar page
         async with sess.get("https://eduserver.nitc.ac.in/calendar/view.php?view=day") as resp:
@@ -37,7 +39,7 @@ async def crawl():
             if not db.schedExists(sid):
                 db.schedule(sid, uid, time, link)
                 # print(f"Found new attendance for {username} at {time_str[2:]}", file=open("attendance.log", "a"))
-        await sess.close()
+        # await sess.close()
 
     tasks = [oneiter(uid, username, password) for uid, username, password in users]
     await asyncio.gather(*tasks)
@@ -50,15 +52,15 @@ async def loop(schedules):
         # if time <= now:
         # link active
         # print(f'Found valid time for {username}', file=open("attendance.log", "a"))
-        session = await utilities.get_session(username, password)
+        uid = id//100000
+        session = sessions[uid] if not utilities.expired(sessions[uid]) else await utilities.get_session(username, password)
         async with session.get("https://eduserver.nitc.ac.in/mod/attendance/view.php?id="+link) as response:
             r = await response.text()
 
         # find submit link
-        pattern = r'mod\/attendance\/attendance.php\?sessid=\d+&amp;sesskey=\w+'
-        search = re.findall(pattern, r)
+        search = submit.search(r)
         if search:
-            submiturl = search[0]
+            submiturl = search.group(0)
             async with session.get("https://eduserver.nitc.ac.in/" + submiturl) as resp:
                 r = await resp.text()
 
@@ -67,58 +69,69 @@ async def loop(schedules):
             present_span = soup.find("span", class_="statusdesc", string="Present")
             if not present_span:
                 present_span = soup.find("span", class_="statusdesc", string="Excused")
-            present_status = present_span.parent.find("input", attrs={"name": "status"}).attrs["value"]
-            sessid = soup.find("input", attrs={"name": "sessid"}).attrs["value"]
-            sesskey = soup.find("input", attrs={"name": "sesskey"}).attrs["value"]
-            course = soup.find("h1").string
-            data = {
-                "status":  present_status,
-                "sessid": sessid,
-                "sesskey": sesskey,
-                "_qf__mod_attendance_student_attendance_form": "1",
-                "mform_isexpanded_id_session": "1",
-                "submitbutton": "Save+changes"
-            }
+            if present_span:
+                present_status = present_span.parent.find("input", attrs={"name": "status"}).attrs["value"]
+                # sessid = soup.find("input", attrs={"name": "sessid"}).attrs["value"]
+                # sesskey = soup.find("input", attrs={"name": "sesskey"}).attrs["value"]
+                sessid = search.group(1)
+                sesskey = search.group(2)
+                course = soup.find("h1").string
+                data = {
+                    "status":  present_status,
+                    "sessid": sessid,
+                    "sesskey": sesskey,
+                    "_qf__mod_attendance_student_attendance_form": "1",
+                    "mform_isexpanded_id_session": "1",
+                    "submitbutton": "Save+changes"
+                }
 
-            # submit
-            r = await session.post(
-                'https://eduserver.nitc.ac.in/mod/attendance/attendance.php',
-                data=data
-            )
-            await session.post(
-                webHook,
-                json={"content": f'Proxied {course} for <@{disco}> ({username}) at {datetime.now()} in {tries+1} tries'}
-            )
-            # print(f'Marked {time} attendance for {username} at {now} in {tries+1} tries', file=open("attendance.log", "a"))
+                # submit
+                r = await session.post(
+                    'https://eduserver.nitc.ac.in/mod/attendance/attendance.php',
+                    data=data
+                )
+                await session.post(
+                    webHook,
+                    json={"content": f'Proxied {course} for <@{disco}> ({username}) :heart:'}
+                )
 
-            # set marked
-            db.update(id, r.status==200, tries+1)
+                # set marked
+                db.update(id, r.status==200, tries+1)
+            else:
+                db.update(id, False, tries+1)
         else:
             db.update(id, False, tries+1)
-        await session.close()
+        # await session.close()
 
     cors = [mark1(id, username, password, disco, link, tries) for id, username, password, disco, time, link, tries in schedules if time.astimezone(ist) <= now]
     await asyncio.gather(*cors)
 
 if __name__=="__main__":
+    async def init():
+        for id, username, password in db.get_users():
+            sessions[id] = await utilities.get_session(username, password)
+    asyncio.run(init())
     while True:
         now = pytz.utc.localize(datetime.utcnow()).astimezone(ist)
 
         # check for link at specified times
-        if ((7 <= now.hour < 10 and now.minute == 50 and now.second<=5) or
-            (7 <= now.hour < 10 and now.minute == 55 and now.second<=5) or
-            ( 8 <= now.hour <  10 and now.minute == 0 and now.second<=5) or
-            (10 <= now.hour <= 11 and now.minute == 5 and now.second<=5) or
-            (10 <= now.hour <= 11 and now.minute == 10 and now.second<=5) or
-            (10 <= now.hour <= 11 and now.minute == 15 and now.second<=5) or
-            (12 <= now.hour <= 16 and now.minute == 55 and now.second<=5) or
-            (13 <= now.hour <= 17 and now.minute == 0 and now.second<=5)):
+        if (( 7 <= now.hour < 10 and now.minute == 50 and now.second<=5) or
+            ( 7 <= now.hour <  9 and now.minute == 54 and now.second<=5) or
+            ( 7 <= now.hour <  9 and now.minute == 59 and now.second<=5) or
+            (10 <= now.hour <= 11 and now.minute == 4 and now.second<=5) or
+            (10 <= now.hour <= 11 and now.minute == 9 and now.second<=5) or
+            (10 <= now.hour <= 11 and now.minute == 14 and now.second<=5) or
+            (12 <= now.hour <= 16 and now.minute == 54 and now.second<=5) or
+            (12 <= now.hour <= 17 and now.minute == 59 and now.second<=5)):
             asyncio.run(crawl())
+            schedules = db.get_schedule()
         if now.hour == 18:
+            async def close():
+                for ses in sessions.values():
+                    await ses.close()
+            asyncio.run(close())
             db.clear()
             exit(0)
-        schedules = db.get_schedule()
         # mark if schedule exists
         if schedules and schedules[0][4].astimezone(ist) <= now:
-            print(schedules[0][4].astimezone(ist))
             asyncio.run(loop(schedules))

@@ -2,13 +2,14 @@ import re
 import aiohttp
 import os
 
+findt = re.compile(r'<input type="hidden" name="logintoken" value="(\w{32})">')
 
 async def login(session, username, password):
     async with session.get("https://eduserver.nitc.ac.in/login/index.php") as resp:
         r = await resp.text()
 
     # find login token
-    token = re.findall(r'<input type="hidden" name="logintoken" value="(\w{32})">', r)[0]
+    token = findt.search(r).group(0)
     login = {
         "username":  username,
         "password": password,
@@ -41,6 +42,3 @@ async def get_session(username, password):
         session = await login(session, username, password)
         session.cookie_jar.save(cookiejar)
     return session
-
-
-

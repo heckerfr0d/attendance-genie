@@ -96,7 +96,7 @@ async def loop(schedules):
             db.update(id, False, tries+1)
         await session.close()
 
-    cors = [mark1(id, username, password, disco, time, link, tries) for id, username, password, disco, time, link, tries in schedules if time.replace(tzinfo=ist) <= now]
+    cors = [mark1(id, username, password, disco, time, link, tries) for id, username, password, disco, time, link, tries in schedules if time.astimezone(ist) <= now]
     await asyncio.gather(*cors)
 
 
@@ -119,5 +119,5 @@ while True:
     schedules = db.get_schedule()
 
     # mark if schedule exists
-    if schedules and schedules[0][4].replace(tzinfo=ist) <= now:
+    if schedules and schedules[0][4].astimezone(ist) <= now:
         asyncio.run(loop(schedules))

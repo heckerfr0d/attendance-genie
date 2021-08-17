@@ -16,14 +16,10 @@ def dupeUser(username):
 
 # new signup yey
 def add_user(username, password, disco=None):
-    try:
-        cur = conn.cursor()
-        cur.execute("INSERT INTO users (username, password, disco) VALUES (%s, %s, %s)", (username, password, disco))
-        conn.commit()
-        cur.close()
-        return True
-    except:
-        return False
+    cur = conn.cursor()
+    cur.execute("INSERT INTO users (username, password, disco) VALUES (%s, %s, %s)", (username, password, disco))
+    conn.commit()
+    cur.close()
 
 # get all unmarked attendance
 def get_schedule():
@@ -32,16 +28,11 @@ def get_schedule():
     return cur.fetchall()
 
 # add to schedule
-def schedule(uid, time, link):
-    try:
-        cur = conn.cursor()
-        id = int(str(uid)+link)
-        cur.execute("INSERT INTO schedule (id, uid, time, link, marked, tries) VALUES (%s, %s, %s, %s, %s, %s)", (id, uid, time, link, False, 0))
-        conn.commit()
-        cur.close()
-        return True
-    except:
-        return False
+def schedule(id, uid, time, link):
+    cur = conn.cursor()
+    cur.execute("INSERT INTO schedule (id, uid, time, link, marked, tries) VALUES (%s, %s, %s, %s, %s, %s)", (id, uid, time, link, False, 0))
+    conn.commit()
+    cur.close()
 
 def schedExists(sid):
     cur = conn.cursor()

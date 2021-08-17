@@ -35,7 +35,7 @@ def get_schedule():
 def schedule(uid, time, link):
     try:
         cur = conn.cursor()
-        id = int(str(uid)+link[-5:])
+        id = int(str(uid)+link)
         cur.execute("INSERT INTO schedule (id, uid, time, link, marked, tries) VALUES (%s, %s, %s, %s, %s, %s)", (id, uid, time, link, False, 0))
         conn.commit()
         cur.close()

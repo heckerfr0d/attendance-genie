@@ -33,7 +33,7 @@ async def crawl():
                 continue
             # get link
             link = block.find("a", string="Go to activity").attrs["href"][-5:]
-            if not db.schedExists(str(uid)+link):
+            if not db.schedExists(int(str(uid)+link)):
                 db.schedule(uid, time.timestamp(), link)
                 # print(f"Found new attendance for {username} at {time_str[2:]}", file=open("attendance.log", "a"))
         await sess.close()

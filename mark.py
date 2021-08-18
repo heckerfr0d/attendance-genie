@@ -15,7 +15,10 @@ async def crawl():
     users = db.get_users()
 
     async def oneiter(uid, username, password):
-        sess = sessions[uid] if not (await utilities.expired(sessions[uid])) else await utilities.get_session(username, password)
+        expired = await utilities.expired(sessions[uid])
+        if expired:
+            sessions[uid] = await utilities.get_session(username, password)
+        sess = sessions[uid]
 
         # get calendar page
         async with sess.get("https://eduserver.nitc.ac.in/calendar/view.php?view=day") as resp:
@@ -53,7 +56,10 @@ async def loop(schedules):
         # link active
         # print(f'Found valid time for {username}', file=open("attendance.log", "a"))
         uid = id//100000
-        session = sessions[uid] if not (await utilities.expired(sessions[uid])) else await utilities.get_session(username, password)
+        expired = await utilities.expired(sessions[uid])
+        if expired:
+            sessions[uid] = await utilities.get_session(username, password)
+        session = sessions[uid]
         async with session.get("https://eduserver.nitc.ac.in/mod/attendance/view.php?id="+link) as response:
             r = await response.text()
 

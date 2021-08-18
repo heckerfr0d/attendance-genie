@@ -111,6 +111,9 @@ if __name__=="__main__":
         for id, username, password in db.get_users():
             sessions[id] = await utilities.get_session(username, password)
     asyncio.run(init())
+
+    schedules =[]
+
     while True:
         now = pytz.utc.localize(datetime.utcnow()).astimezone(ist)
 

@@ -9,7 +9,7 @@ async def login(session, username, password):
         r = await resp.text()
 
     # find login token
-    token = findt.search(r).group(0)
+    token = findt.search(r).group(1)
     login = {
         "username":  username,
         "password": password,

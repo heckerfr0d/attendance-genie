@@ -12,9 +12,11 @@ submit = re.compile(r'mod\/attendance\/attendance.php\?sessid=(\d{5})&amp;sesske
 sessions = {}
 
 async def crawl():
+    global sessions
     users = db.get_users()
 
     async def oneiter(uid, username, password):
+        global sessions
         expired = await utilities.expired(sessions[uid])
         if expired:
             sessions[uid] = await utilities.get_session(username, password)
@@ -117,7 +119,8 @@ async def init():
         sessions[id] = await utilities.get_session(username, password)
 
 if __name__=="__main__":
-    asyncio.run(init())
+    lp = asyncio.get_event_loop()
+    lp.run_until_complete(init())
 
     schedules =[]
 
@@ -125,23 +128,24 @@ if __name__=="__main__":
         now = pytz.utc.localize(datetime.utcnow()).astimezone(ist)
 
         # check for link at specified times
-        if (( 7 <= now.hour < 10 and now.minute == 50 and now.second<=5) or
+        if (( 7 <= now.hour < 10 and now.minute == 52 and now.second<=5) or
             ( 7 <= now.hour <  9 and now.minute == 54 and now.second<=5) or
-            ( 7 <= now.hour <  9 and now.minute == 59 and now.second<=5) or
+            ( 7 <= now.hour <  9 and now.minute == 49 and now.second<=5) or
             (10 <= now.hour <= 11 and now.minute == 4 and now.second<=5) or
             (10 <= now.hour <= 11 and now.minute == 9 and now.second<=5) or
             (10 <= now.hour <= 11 and now.minute == 14 and now.second<=5) or
             (12 <= now.hour <= 16 and now.minute == 54 and now.second<=5) or
             (12 <= now.hour <= 17 and now.minute == 59 and now.second<=5)):
-            asyncio.run(crawl())
+            lp.run_until_complete(crawl())
             schedules = db.get_schedule()
         if now.hour == 18:
             async def close():
                 for ses in sessions.values():
                     await ses.close()
-            asyncio.run(close())
+            lp.run_until_complete(close())
+            lp.close()
             db.clear()
             exit(0)
         # mark if schedule exists
         if schedules and schedules[0][4].astimezone(ist) <= now:
-            asyncio.run(loop(schedules))
+            lp.run_until_complete(loop(schedules))

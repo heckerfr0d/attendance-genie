@@ -79,8 +79,8 @@ async def loop(schedules):
                 present_span = soup.find("span", class_="statusdesc", string="Excused")
             if present_span:
                 present_status = present_span.parent.find("input", attrs={"name": "status"}).attrs["value"]
-                # sessid = soup.find("input", attrs={"name": "sessid"}).attrs["value"]
-                # sesskey = soup.find("input", attrs={"name": "sesskey"}).attrs["value"]
+                # sessid1 = soup.find("input", attrs={"name": "sessid"}).attrs["value"]
+                # sesskey1 = soup.find("input", attrs={"name": "sesskey"}).attrs["value"]
                 sessid = search.group(1)
                 sesskey = search.group(2)
                 course = soup.find("h1").string
@@ -122,15 +122,15 @@ if __name__=="__main__":
     lp = asyncio.get_event_loop()
     lp.run_until_complete(init())
 
-    schedules =[]
+    schedules = db.get_schedule()
 
     while True:
         now = pytz.utc.localize(datetime.utcnow()).astimezone(ist)
 
         # check for link at specified times
-        if (( 7 <= now.hour < 10 and now.minute == 52 and now.second<=5) or
+        if (( 7 <= now.hour < 10 and now.minute == 50 and now.second<=5) or
             ( 7 <= now.hour <  9 and now.minute == 54 and now.second<=5) or
-            ( 7 <= now.hour <  9 and now.minute == 49 and now.second<=5) or
+            ( 7 <= now.hour <  9 and now.minute == 59 and now.second<=5) or
             (10 <= now.hour <= 11 and now.minute == 4 and now.second<=5) or
             (10 <= now.hour <= 11 and now.minute == 9 and now.second<=5) or
             (10 <= now.hour <= 11 and now.minute == 14 and now.second<=5) or
@@ -149,3 +149,4 @@ if __name__=="__main__":
         # mark if schedule exists
         if schedules and schedules[0][4].astimezone(ist) <= now:
             lp.run_until_complete(loop(schedules))
+            schedules = db.get_schedule()

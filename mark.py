@@ -15,7 +15,7 @@ async def crawl():
     users = db.get_users()
 
     async def oneiter(uid, username, password):
-        sess = sessions[uid] if not utilities.expired(sessions[uid]) else await utilities.get_session(username, password)
+        sess = sessions[uid] if not (await utilities.expired(sessions[uid])) else await utilities.get_session(username, password)
 
         # get calendar page
         async with sess.get("https://eduserver.nitc.ac.in/calendar/view.php?view=day") as resp:
@@ -53,7 +53,7 @@ async def loop(schedules):
         # link active
         # print(f'Found valid time for {username}', file=open("attendance.log", "a"))
         uid = id//100000
-        session = sessions[uid] if not utilities.expired(sessions[uid]) else await utilities.get_session(username, password)
+        session = sessions[uid] if not (await utilities.expired(sessions[uid])) else await utilities.get_session(username, password)
         async with session.get("https://eduserver.nitc.ac.in/mod/attendance/view.php?id="+link) as response:
             r = await response.text()
 
@@ -106,10 +106,11 @@ async def loop(schedules):
     cors = [mark1(id, username, password, disco, link, tries) for id, username, password, disco, time, link, tries in schedules if time.astimezone(ist) <= now]
     await asyncio.gather(*cors)
 
+async def init():
+    for id, username, password in db.get_users():
+        sessions[id] = await utilities.get_session(username, password)
+
 if __name__=="__main__":
-    async def init():
-        for id, username, password in db.get_users():
-            sessions[id] = await utilities.get_session(username, password)
     asyncio.run(init())
 
     schedules =[]

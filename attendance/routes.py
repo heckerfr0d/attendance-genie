@@ -1,6 +1,6 @@
 from flask import current_app as app
 from flask import render_template, request, make_response
-from . import db
+from . import user as db
 import requests
 import os
 

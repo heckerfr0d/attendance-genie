@@ -57,12 +57,12 @@ async def loop(schedules):
     # now = pytz.utc.localize(datetime.utcnow()).astimezone(ist)
     now = datetime.now()
 
-    async def mark1(id, username, password, disco, link, tries):
+    async def mark1(uid, username, password, disco, link, tries):
         # time = time.replace(tzinfo=ist)
         # if time <= now:
         # link active
         # print(f'Found valid time for {username}', file=open("attendance.log", "a"))
-        uid = id//100000
+        # uid = id//100000
         expired = await utilities.expired(sessions[uid])
         if expired:
             sessions[uid] = await utilities.get_session(username, password)
@@ -109,22 +109,22 @@ async def loop(schedules):
                 )
 
                 # set marked
-                db.update(id, r.status==200, tries+1)
+                db.update(uid, link, r.status==200, tries+1)
             else:
                 await session.post(
                     webHook,
                     json={"content": f'"Present" missing for {course} for <@{disco}> ({username}) :")"'}
                 )
-                db.update(id, False, tries+1)
+                db.update(uid, link, False, tries+1)
         else:
             await session.post(
                 webHook,
                 json={"content": f'Submission link missing for <@{disco}> ({username}) :")"'}
             )
-            db.update(id, False, tries+1)
+            db.update(uid, link, False, tries+1)
         # await session.close()
 
-    cors = [mark1(id, username, password, disco, link, tries) for id, username, password, disco, time, link, tries in schedules if time <= now]
+    cors = [mark1(uid, username, password, disco, link, tries) for uid, username, password, disco, time, link, tries in schedules if time <= now]
     await asyncio.gather(*cors)
 
 async def init():

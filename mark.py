@@ -50,7 +50,7 @@ async def crawl():
                 # print(f"Found new attendance for {username} at {time_str[2:]}", file=open("attendance.log", "a"))
         # await sess.close()
 
-    tasks = [oneiter(uid, username, password) for uid, username, password in users]
+    tasks = [oneiter(uid, username, password) for uid, username, password, disco in users]
     await asyncio.gather(*tasks)
 
 async def loop(schedules):
@@ -113,13 +113,13 @@ async def loop(schedules):
             else:
                 await session.post(
                     webHook,
-                    json={"content": f'"Present" missing for {course} for <@{disco}> ({username}) :")"'}
+                    json={"content": f'"Present" missing for <@{disco}> ({username})\'s {course} :")'}
                 )
                 db.update(uid, link, False, tries+1)
         else:
             await session.post(
                 webHook,
-                json={"content": f'Submission link missing for <@{disco}> ({username}) :")"'}
+                json={"content": f'Submission link missing for <@{disco}> ({username}) :")'}
             )
             db.update(uid, link, False, tries+1)
         # await session.close()
@@ -128,13 +128,15 @@ async def loop(schedules):
     await asyncio.gather(*cors)
 
 async def init():
-    for id, username, password in user.get_users():
+    users = user.get_users()
+    for id, username, password, disco in users:
         sessions[id] = await utilities.get_session(username, password)
+    db.load_users(users)
 
 if __name__=="__main__":
     lp = asyncio.get_event_loop()
     lp.run_until_complete(init())
-
+    lp.run_until_complete(crawl())
     schedules = db.get_schedule()
 
     while True:
@@ -145,7 +147,7 @@ if __name__=="__main__":
         if (( 7 <= now.hour < 10 and now.minute == 50 and now.second<=5) or
             ( 7 <= now.hour <  9 and now.minute == 54 and now.second<=5) or
             ( 7 <= now.hour <  9 and now.minute == 59 and now.second<=5) or
-            (10 <= now.hour <= 11 and now.minute == 5 and now.second<=5) or
+            (10 <= now.hour <= 11 and now.minute == 4 and now.second<=5) or
             (10 <= now.hour <= 11 and now.minute == 9 and now.second<=5) or
             (10 <= now.hour <= 11 and now.minute == 14 and now.second<=5) or
             (12 <= now.hour <= 16 and now.minute == 54 and now.second<=5) or

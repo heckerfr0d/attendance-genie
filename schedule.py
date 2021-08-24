@@ -1,12 +1,20 @@
 import sqlite3
 
-conn = sqlite3.connect(':memory:', isolation_level='DEFERRED')
+conn = sqlite3.connect(':memory:', isolation_level='DEFERRED', detect_types=sqlite3.PARSE_DECLTYPES | sqlite3.PARSE_COLNAMES)
 conn.execute('PRAGMA synchronous = OFF')
 conn.execute('PRAGMA journal_mode = OFF')
 conn.execute('''
+    CREATE TABLE users (
+        id INTEGER PRIMARY KEY,
+        username VARCHAR(10) UNIQUE NOT NULL,
+        password VARCHAR(32) NOT NULL,
+        disco VARCHAR(19)
+    )
+''')
+conn.execute('''
     CREATE TABLE schedule (
             uid INTEGER REFERENCES users(id) NOT NULL,
-            time TIMESTAMP WITH TIME ZONE NOT NULL,
+            time TIMESTAMP NOT NULL,
             link VARCHAR(6) NOT NULL,
             marked BOOLEAN default FALSE,
             tries INTEGER NOT NULL default 0,
@@ -14,12 +22,18 @@ conn.execute('''
         )
 ''')
 
+
+def load_users(users):
+    conn.executemany(
+        "INSERT INTO users (id, username, password, disco) VALUES (?, ?, ?, ?)", users)
+
 # get all unmarked attendance
 
 
 def get_schedule():
-    conn.execute("SELECT s.uid, u.username, u.password, u.disco, s.time, s.link, s.tries FROM schedule s, users u WHERE (s.uid=u.id and s.tries<3 and s.marked=FALSE) ORDER BY time")
-    return conn.fetchall()
+    cur = conn.cursor()
+    cur.execute("SELECT s.uid, u.username, u.password, u.disco, s.time, s.link, s.tries FROM schedule s, users u WHERE (s.uid=u.id and s.tries<3 and s.marked=FALSE) ORDER BY time")
+    return cur.fetchall()
 
 # add to schedule
 
@@ -27,9 +41,10 @@ def get_schedule():
 def schedule(uid, time, link):
     try:
         conn.execute("INSERT INTO schedule (uid, time, link, marked, tries) VALUES (?, ?, ?, ?, ?)",
-                    (uid, time, link, False, 0))
+                     (uid, time, link, False, 0))
     except:
-        conn.execute("UPDATE schedule SET time=(?) WHERE uid=(?) and link=(?)", (time, uid, link))
+        conn.execute(
+            "UPDATE schedule SET time=(?) WHERE uid=(?) and link=(?)", (time, uid, link))
     conn.commit()
 
 # clear schedule

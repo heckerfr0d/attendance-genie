@@ -1,5 +1,4 @@
 from psycopg2 import connect
-import sqlite3
 import os
 
 conn = connect(os.getenv('DATABASE_URL'), sslmode='require')
@@ -7,7 +6,7 @@ conn = connect(os.getenv('DATABASE_URL'), sslmode='require')
 # get username, password list
 def get_users():
     cur = conn.cursor()
-    cur.execute("SELECT id, username, password FROM users")
+    cur.execute("SELECT id, username, password, disco FROM users")
     return cur.fetchall()
 
 def dupeUser(username):

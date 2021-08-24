@@ -1,3 +1,5 @@
+#!/usr/bin/python3
+
 import asyncio
 from datetime import datetime, timedelta
 from bs4 import BeautifulSoup

@@ -2,7 +2,7 @@ import sqlite3
 
 conn = sqlite3.connect(':memory:', isolation_level='DEFERRED', detect_types=sqlite3.PARSE_DECLTYPES | sqlite3.PARSE_COLNAMES)
 conn.execute('PRAGMA synchronous = OFF')
-conn.execute('PRAGMA journal_mode = OFF')
+# conn.execute('PRAGMA journal_mode = OFF')
 conn.execute('''
     CREATE TABLE users (
         id INTEGER PRIMARY KEY,
@@ -43,6 +43,7 @@ def schedule(uid, time, link):
         conn.execute("INSERT INTO schedule (uid, time, link, marked, tries) VALUES (?, ?, ?, ?, ?)",
                      (uid, time, link, False, 0))
     except:
+        conn.rollback()
         conn.execute(
             "UPDATE schedule SET time=(?) WHERE uid=(?) and link=(?)", (time, uid, link))
     conn.commit()

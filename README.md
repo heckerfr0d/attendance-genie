@@ -21,5 +21,6 @@ python3 mark.py
 Finding a VPS to host it is something I'll leave to you 😁  
 
 **Smol disclaimer**: Very rarely it can happen that the script runs into some error and fails to mark your attendance... Please be vigilant for at least a week after joining the club and report any bugs/discrepancies found.  
+Also, to favour speed over security your passwords are stored as plain text in our (secure) database so maybe not tell us your bank passwords? :P  
 
 For contributions of any kind feel free to open an issue or submit a PR or even directly contact me :innocent:

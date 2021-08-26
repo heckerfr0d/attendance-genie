@@ -42,7 +42,7 @@ async def crawl():
             hour = int(time_str[2:-7])
             if time_str[-3] == "P" and hour != 12:
                 hour = hour+12
-            time = now.replace(hour=hour, minute=int(time_str[-6:-4]), second=0, microsecond=200)
+            time = now.replace(hour=hour, minute=int(time_str[-6:-4]), second=0, microsecond=500)
             if now-time > timedelta(minutes=5):
                 continue
             # get link
@@ -96,18 +96,18 @@ async def loop(schedules):
                     'https://eduserver.nitc.ac.in/mod/attendance/attendance.php',
                     data=data
                 )
-                msg = f"Got <@{disco}>'s {course}." if disco else f"Got {username}'s {course}."
+                msg = f"Got <@{disco}>'s `{course}`." if disco else f"Got {username}'s {course}."
                 r2 = await session.post(
                     webHook,
                     json={"content": msg}
                 )
+                # set marked
+                db.update(uid, link, r.status==200, tries+1)
                 if r2.status != 204:
                     await session.post(
                         webHook,
                         json={"content": msg}
                     )
-                # set marked
-                db.update(uid, link, r.status==200, tries+1)
             else:
                 await session.post(
                     webHook,

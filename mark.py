@@ -101,7 +101,11 @@ async def loop(schedules):
                     webHook,
                     json={"content": msg}
                 )
-                print(msg, r2.status, file=open("log.txt", "a"))
+                if r2.status != 204:
+                    await session.post(
+                        webHook,
+                        json={"content": msg}
+                    )
                 # set marked
                 db.update(uid, link, r.status==200, tries+1)
             else:

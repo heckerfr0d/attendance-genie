@@ -42,7 +42,7 @@ async def crawl():
             hour = int(time_str[2:-7])
             if time_str[-3] == "P" and hour != 12:
                 hour = hour+12
-            time = now.replace(hour=hour, minute=int(time_str[-6:-4]), second=0, microsecond=50)
+            time = now.replace(hour=hour, minute=int(time_str[-6:-4]), second=0, microsecond=200)
             if now-time > timedelta(minutes=5):
                 continue
             # get link
@@ -101,23 +101,19 @@ async def loop(schedules):
                     webHook,
                     json={"content": msg}
                 )
-                if r2.status != 200:
-                    await session.post(
-                        webHook,
-                        json={"content": msg}
-                    )
+                print(msg, r2.status, file=open("log.txt", "a"))
                 # set marked
                 db.update(uid, link, r.status==200, tries+1)
             else:
                 await session.post(
                     webHook,
-                    json={"content": f'{tries+1}th fail for <@{disco if disco else username}>\'s {course}'}
+                    json={"content": f'{tries+1} fail(s) for <@{disco if disco else username}>\'s {course}'}
                 )
                 db.update(uid, link, False, tries+1)
         else:
             await session.post(
                 webHook,
-                json={"content": f'{tries+1}th fail for <@{disco if disco else username}>'}
+                json={"content": f'{tries+1} fail(s) for <@{disco if disco else username}>'}
             )
             db.update(uid, link, False, tries+1)
         # await session.close()

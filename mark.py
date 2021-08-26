@@ -47,9 +47,7 @@ async def crawl():
                 continue
             # get link
             link = block.find("a", string="Go to activity").attrs["href"][-5:]
-            # sid = int(str(uid)+link)
             db.schedule(uid, time, link)
-                # print(f"Found new attendance for {username} at {time_str[2:]}", file=open("attendance.log", "a"))
         # await sess.close()
 
     tasks = [oneiter(uid, username, password) for uid, username, password, disco in users]
@@ -60,11 +58,6 @@ async def loop(schedules):
     now = datetime.now()
 
     async def mark1(uid, username, password, disco, link, tries):
-        # time = time.replace(tzinfo=ist)
-        # if time <= now:
-        # link active
-        # print(f'Found valid time for {username}', file=open("attendance.log", "a"))
-        # uid = id//100000
         expired = await utilities.expired(sessions[uid])
         if expired:
             sessions[uid] = await utilities.get_session(username, password)
@@ -87,8 +80,6 @@ async def loop(schedules):
                 present_span = soup.find("span", class_="statusdesc", string="Excused")
             if present_span:
                 present_status = present_span.parent.find("input", attrs={"name": "status"}).attrs["value"]
-                # sessid1 = soup.find("input", attrs={"name": "sessid"}).attrs["value"]
-                # sesskey1 = soup.find("input", attrs={"name": "sesskey"}).attrs["value"]
                 sessid = search.group(1)
                 sesskey = search.group(2)
                 data = {
@@ -105,23 +96,28 @@ async def loop(schedules):
                     'https://eduserver.nitc.ac.in/mod/attendance/attendance.php',
                     data=data
                 )
-                await session.post(
+                msg = f"Got <@{disco}>'s {course}." if disco else f"Got {username}'s {course}."
+                r2 = await session.post(
                     webHook,
-                    json={"content": f'Proxied {course} for <@{disco}> ({username}) :v:'}
+                    json={"content": msg}
                 )
-
+                if r2.status != 200:
+                    await session.post(
+                        webHook,
+                        json={"content": msg}
+                    )
                 # set marked
                 db.update(uid, link, r.status==200, tries+1)
             else:
                 await session.post(
                     webHook,
-                    json={"content": f'"Present" missing for <@{disco}> ({username})\'s {course} :")'}
+                    json={"content": f'{tries+1}th fail for <@{disco if disco else username}>\'s {course}'}
                 )
                 db.update(uid, link, False, tries+1)
         else:
             await session.post(
                 webHook,
-                json={"content": f'Submission link missing for <@{disco}> ({username}) :")'}
+                json={"content": f'{tries+1}th fail for <@{disco if disco else username}>'}
             )
             db.update(uid, link, False, tries+1)
         # await session.close()

@@ -42,7 +42,7 @@ async def crawl():
             hour = int(time_str[2:-7])
             if time_str[-3] == "P" and hour != 12:
                 hour = hour+12
-            time = now.replace(hour=hour, minute=int(time_str[-6:-4]), second=0, microsecond=500)
+            time = now.replace(hour=hour, minute=int(time_str[-6:-4]), second=0, microsecond=5000)
             if now-time > timedelta(minutes=5):
                 continue
             # get link

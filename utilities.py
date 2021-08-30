@@ -31,7 +31,8 @@ async def expired(session):
 # get logged in session
 async def get_session(username, password):
     cookiejar = os.path.join("cookies", username)
-    session = aiohttp.ClientSession()
+    timeout = aiohttp.ClientTimeout(total=2400)
+    session = aiohttp.ClientSession(timeout=timeout)
 
     # try cookie
     if os.path.exists(cookiejar):

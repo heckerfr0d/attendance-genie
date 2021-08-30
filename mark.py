@@ -134,6 +134,7 @@ async def init():
     for id, username, password, disco in users:
         sessions[id] = await utilities.get_session(username, password)
     db.load_users(users)
+    timeout = aiohttp.ClientTimeout(total=3600)
     genie = aiohttp.ClientSession(timeout=timeout)
 
 if __name__=="__main__":
@@ -141,7 +142,6 @@ if __name__=="__main__":
     lp.run_until_complete(init())
     lp.run_until_complete(crawl())
     schedules = db.get_schedule()
-    timeout = aiohttp.ClientTimeout(total=3600)
 
     while True:
         # now = pytz.utc.localize(datetime.utcnow()).astimezone(ist)

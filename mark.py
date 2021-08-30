@@ -129,10 +129,12 @@ async def loop(schedules):
     await asyncio.gather(*cors)
 
 async def init():
+    global genie
     users = user.get_users()
     for id, username, password, disco in users:
         sessions[id] = await utilities.get_session(username, password)
     db.load_users(users)
+    genie = aiohttp.ClientSession(timeout=timeout)
 
 if __name__=="__main__":
     lp = asyncio.get_event_loop()
@@ -140,7 +142,6 @@ if __name__=="__main__":
     lp.run_until_complete(crawl())
     schedules = db.get_schedule()
     timeout = aiohttp.ClientTimeout(total=3600)
-    genie = aiohttp.ClientSession(timeout=timeout)
 
     while True:
         # now = pytz.utc.localize(datetime.utcnow()).astimezone(ist)

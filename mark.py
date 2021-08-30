@@ -1,6 +1,7 @@
 #!/usr/bin/python3
 
 import asyncio
+import aiohttp
 from datetime import datetime, timedelta
 from bs4 import BeautifulSoup
 import schedule as db
@@ -14,6 +15,8 @@ import os
 webHook = os.getenv('WEBHOOK')
 submit = re.compile(r'mod\/attendance\/attendance.php\?sessid=(\d{5})&amp;sesskey=(\w{10})')
 sessions = {}
+
+genie = None
 
 async def crawl():
     global sessions
@@ -97,25 +100,25 @@ async def loop(schedules):
                     data=data
                 )
                 msg = f"Got <@{disco}>'s `{course}`." if disco else f"Got {username}'s {course}."
-                r2 = await session.post(
+                r2 = await genie.post(
                     webHook,
                     json={"content": msg}
                 )
                 # set marked
                 db.update(uid, link, r.status==200, tries+1)
-                if r2.status != 204:
-                    await session.post(
+                while r2.status != 204:
+                    r2 = await genie.post(
                         webHook,
                         json={"content": msg}
                     )
             else:
-                await session.post(
+                await genie.post(
                     webHook,
                     json={"content": f'{tries+1} fail(s) for <@{disco if disco else username}>\'s {course}'}
                 )
                 db.update(uid, link, False, tries+1)
         else:
-            await session.post(
+            await genie.post(
                 webHook,
                 json={"content": f'{tries+1} fail(s) for <@{disco if disco else username}>'}
             )
@@ -136,13 +139,15 @@ if __name__=="__main__":
     lp.run_until_complete(init())
     lp.run_until_complete(crawl())
     schedules = db.get_schedule()
+    timeout = aiohttp.ClientTimeout(total=3600)
+    genie = aiohttp.ClientSession(timeout=timeout)
 
     while True:
         # now = pytz.utc.localize(datetime.utcnow()).astimezone(ist)
         now = datetime.now()
 
         # check for link at specified times
-        if (( 7 <= now.hour < 10 and now.minute == 50 and now.second<=5) or
+        if (( 7 <= now.hour < 10 and now.minute == 49 and now.second<=5) or
             ( 7 <= now.hour <  9 and now.minute == 54 and now.second<=5) or
             ( 7 <= now.hour <  9 and now.minute == 59 and now.second<=5) or
             (10 <= now.hour <= 11 and now.minute == 4 and now.second<=5) or
@@ -157,6 +162,7 @@ if __name__=="__main__":
                 for ses in sessions.values():
                     await ses.close()
             lp.run_until_complete(close())
+            genie.close()
             lp.close()
             db.clear()
             exit(0)

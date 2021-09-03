@@ -1,5 +1,3 @@
-flask
-gunicorn
 aiohttp
 asyncio
 beautifulsoup4

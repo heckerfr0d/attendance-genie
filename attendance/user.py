@@ -1,5 +1,4 @@
 from psycopg2 import connect
-import sqlite3
 import os
 
 conn = connect(os.getenv('DATABASE_URL'), sslmode='require')

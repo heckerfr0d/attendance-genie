@@ -1,0 +1,101 @@
+.login-card{
+	background-color: aliceblue;
+}
+
+.blank{
+	background-color: none;
+}
+
+.container-fluid{
+    height: 100%;
+	background-color: lavender;
+}
+
+.login-card{
+    padding: 50px 20px;
+    box-shadow: 10px 5px 5px lightslategray;
+}
+
+html{
+    height: 100%;
+}
+
+html{
+    background-color: lavender;
+    padding: 20px;
+}
+
+h2{
+    margin: 10px 0;
+}
+
+form{
+    width: 100%;
+}
+
+.hr{
+    background-color: black;
+    opacity: 0.2;
+    height: 1px;
+    width: 100%;
+    margin: 20px;
+}
+
+label{
+    font-size: 1.3rem;
+}
+
+input[type=text]{
+    height: 55px;
+    border-radius: 0px;
+}
+
+button.btn-primary{
+    color: #fff;
+    background-color: lightseagreen;
+    border-color: lightseagreen;
+    border-radius: 0;
+    margin-top: 20px;
+    width: 100px;
+    font-size: 1.45rem;
+}
+
+footer a{
+    text-decoration: none;
+}
+
+footer{
+    font-size: 1.2rem;
+    padding: 50px 0;
+    background-color: lavender;
+}
+
+.logo img{
+    padding-top: 35px;
+    min-width: 500px;
+    width: 70%;
+}
+
+.message{
+    padding: 20px;
+    background-color: lightseagreen;
+    border: 1px solid var(--color-alert-info-border);
+    color: black;
+    position: relative;
+}
+
+.close {
+    color: var(--color-alert-info-text);
+    background: transparent;
+    border: none;
+    font-size: 20px;
+    margin: 4px 2px;
+    position: absolute;
+    top: 0px;
+    right: 5px;
+}
+
+.close:hover{
+    border-radius: 25px;
+    background-color: white;
+}

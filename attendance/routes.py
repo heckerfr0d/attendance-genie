@@ -10,7 +10,7 @@ def main():
         return render_template('main.html', extra=f'Currently overseeing {len(db.get_users())} users 😎️')
     if not db.dupeUser(request.form['name']):
         db.add_user(request.form['name'], request.form['password'], request.form.get('disco', ''))
-        # requests.post(os.getenv('WEBHOOK'), data={"content": f"New User yey <@{request.form.get('disco', '')}> ({request.form['name']}) :partying_face:"})
+        requests.post(os.getenv('WEBHOOK'), data={"content": f"New User yey <@{request.form.get('disco', '')}> ({request.form['name']}) :partying_face:"})
         return render_template('main.html', extra='I got u bro 🫂️')
     else:
         return render_template('main.html', extra='We already got u lol :P')

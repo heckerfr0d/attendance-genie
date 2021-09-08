@@ -1,7 +1,6 @@
 #!/usr/bin/python3
 
 import asyncio
-import aiohttp
 from datetime import datetime, timedelta
 from bs4 import BeautifulSoup
 import schedule as db
@@ -16,17 +15,18 @@ webHook = os.getenv('WEBHOOK')
 submit = re.compile(r'mod\/attendance\/attendance.php\?sessid=(\d{5})&amp;sesskey=(\w{10})')
 sessions = {}
 
-genie = None
-
 async def crawl():
     global sessions
     users = user.get_users()
 
     async def oneiter(uid, username, password):
         global sessions
-        expired = await utilities.expired(sessions[uid])
-        if expired:
-            sessions[uid] = await utilities.get_session(username, password)
+        try:
+            expired = await utilities.expired(sessions[uid])
+            if expired:
+                sessions[uid] = await utilities.get_session(username, password)
+        except:
+            return
         sess = sessions[uid]
 
         # get calendar page
@@ -61,19 +61,36 @@ async def loop(schedules):
     now = datetime.now()
 
     async def mark1(uid, username, password, disco, link, tries):
-        expired = await utilities.expired(sessions[uid])
-        if expired:
-            sessions[uid] = await utilities.get_session(username, password)
+        try:
+            expired = await utilities.expired(sessions[uid])
+            if expired:
+                sessions[uid] = await utilities.get_session(username, password)
+        except:
+            return
         session = sessions[uid]
-        async with session.get("https://eduserver.nitc.ac.in/mod/attendance/view.php?id="+link) as response:
-            r = await response.text()
+        try:
+            async with session.get("https://eduserver.nitc.ac.in/mod/attendance/view.php?id="+link) as response:
+                r = await response.text()
+        except:
+            await session.post(
+                        webHook,
+                        json={"content": username+" aiohttp failed(findlink)"}
+                    )
+            return
 
         # find submit link
         search = submit.search(r)
         if search:
             submiturl = search.group(0)
-            async with session.get("https://eduserver.nitc.ac.in/" + submiturl) as resp:
-                r = await resp.text()
+            try:
+                async with session.get("https://eduserver.nitc.ac.in/" + submiturl) as resp:
+                    r = await resp.text()
+            except:
+                await session.post(
+                            webHook,
+                            json={"content": username+" aiohttp failed(findlink2)"}
+                        )
+                return
 
             # find Present/Excused
             soup = BeautifulSoup(r, 'html.parser')
@@ -95,34 +112,68 @@ async def loop(schedules):
                 }
 
                 # submit
-                r = await session.post(
-                    'https://eduserver.nitc.ac.in/mod/attendance/attendance.php',
-                    data=data
-                )
-                msg = f"Got <@{disco}>'s `{course}`." if disco else f"Got {username}'s {course}."
-                r2 = await genie.post(
-                    webHook,
-                    json={"content": msg}
-                )
-                # set marked
+                try:
+                    r = await session.post(
+                        'https://eduserver.nitc.ac.in/mod/attendance/attendance.php',
+                        data=data
+                    )
+                except:
+                    await session.post(
+                                webHook,
+                                json={"content": username+" aiohttp failed(submit)"}
+                            )
+                    return
                 db.update(uid, link, r.status==200, tries+1)
-                while r2.status != 204:
-                    r2 = await genie.post(
+                msg = f"Got <@{disco}>'s `{course}`." if disco else f"Got {username}'s {course}."
+                try:
+                    r2 = await session.post(
                         webHook,
                         json={"content": msg}
                     )
+                except:
+                    r2 = await session.post(
+                                webHook,
+                                json={"content": username+" aiohttp failed(message)"}
+                            )
+                # set marked
+                while r2.status != 204:
+                    try:
+                        r2 = await session.post(
+                            webHook,
+                            json={"content": msg}
+                        )
+                    except:
+                        await session.post(
+                                    webHook,
+                                    json={"content": username+" aiohttp failed(findlink)"}
+                                )
+                        return
             else:
-                await genie.post(
-                    webHook,
-                    json={"content": f'{tries+1} fail(s) for <@{disco if disco else username}>\'s {course}'}
-                )
                 db.update(uid, link, False, tries+1)
+                try:
+                    await session.post(
+                        webHook,
+                        json={"content": f'{tries+1} fail(s) for <@{disco if disco else username}>\'s {course}'}
+                    )
+                except:
+                    await session.post(
+                                webHook,
+                                json={"content": username+" aiohttp failed(findlink)"}
+                            )
+                    return
         else:
-            await genie.post(
-                webHook,
-                json={"content": f'{tries+1} fail(s) for <@{disco if disco else username}>'}
-            )
             db.update(uid, link, False, tries+1)
+            try:
+                await session.post(
+                    webHook,
+                    json={"content": f'{tries+1} fail(s) for <@{disco if disco else username}>'}
+                )
+            except:
+                await session.post(
+                            webHook,
+                            json={"content": username+" aiohttp failed(findlink)"}
+                        )
+                return
         # await session.close()
 
     cors = [mark1(uid, username, password, disco, link, tries) for uid, username, password, disco, time, link, tries in schedules if time <= now]
@@ -132,10 +183,11 @@ async def init():
     global genie
     users = user.get_users()
     for id, username, password, disco in users:
-        sessions[id] = await utilities.get_session(username, password)
+        try:
+            sessions[id] = await utilities.get_session(username, password)
+        except:
+            sessions[id] = None
     db.load_users(users)
-    timeout = aiohttp.ClientTimeout(total=3600)
-    genie = aiohttp.ClientSession(timeout=timeout)
 
 if __name__=="__main__":
     lp = asyncio.get_event_loop()
@@ -163,7 +215,6 @@ if __name__=="__main__":
                 for ses in sessions.values():
                     await ses.close()
             lp.run_until_complete(close())
-            genie.close()
             lp.close()
             db.clear()
             exit(0)

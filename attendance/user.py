@@ -1,8 +1,8 @@
 from psycopg2 import connect
 import os
 
-# conn = connect(dbname = "attusers")
-conn = connect(os.getenv('DATABASE_URL'), sslmode='require')
+conn = connect(dbname = "attusers")
+# conn = connect(os.getenv('DATABASE_URL'), sslmode='require')
 
 # get username, password list
 def get_users():

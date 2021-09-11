@@ -74,22 +74,22 @@
                 <div class="login-card d-flex flex-column align-items-center">
                     <img class="align-self-start" src="{{ url_for('static', filename='eduserver_logo.png') }}" alt="logo" />
                     <div class="hr"></div>
-                    <h2 class="align-self-start">Sign In</h2>
-                    <form>
+                    <h2 class="align-self-start">Sign Up</h2>
+                    <form method="POST" action="/">
                         <div class="form-group">
                             <label for="name">Username/Email</label>
-                            <input type="text" class="form-control" placeholder="Username">
+                            <input name="name" type="text" class="form-control" placeholder="Username">
                         </div>
                         <div class="form-group">
                             <label for="password">Password</label>
-                            <input type="text" class= " form-control" placeholder="Password">
+                            <input name="password" type="text" class= " form-control" placeholder="Password">
                         </div>
                         <div class="form-group">
                             <label for="disco">Discord ID</label>
-                            <input type="text" class= " form-control" placeholder="Discord ID">
+                            <input name="disco" type="text" class= " form-control" placeholder="Discord ID">
                         </div>
                         <div class="sign-up-btn">
-                            <button type="submit" class="btn btn-primary">Log in</button>
+                            <button type="submit" class="btn btn-primary">Sign Up</button>
                         </div>
                     </form>
                 </div>

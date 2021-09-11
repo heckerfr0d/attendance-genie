@@ -66,14 +66,14 @@ footer a{
 
 footer{
     font-size: 1.2rem;
-    padding: 50px 0;
+    padding: 50px 0 30px 0;
     background-color: lavender;
 }
 
 .logo img{
     padding-top: 35px;
-    min-width: 500px;
-    width: 70%;
+    min-width: 420px;
+    width: 100%;
 }
 
 .message{
@@ -98,4 +98,11 @@ footer{
 .close:hover{
     border-radius: 25px;
     background-color: white;
+}
+
+
+@media (max-width: 991px){
+    .logo img{
+        width: 50%
+    }
 }

@@ -10,14 +10,13 @@
     <link rel="icon" type="image/png" href="{{ url_for('static', filename='icon.png') }}">
 
 
-    <link rel="stylesheet" href="{{ url_for('static', filename='test.css')}}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css')}}">
 
     
 <link rel="icon" type="image/png" href="{{ url_for('static', filename='icon.png') }}">
 
 <link href="{{ url_for('static', filename='bootstrap.min.css') }}" rel="stylesheet">
 
-<link rel="stylesheet" href="{{ url_for('static', filename='style.css')}}">
 <script src="{{ url_for('static', filename='jquery-3.6.0.slim.min.js') }}"></script>
 <script src="{{ url_for('static', filename='bootstrap.bundle.min.js') }}"></script>
 
@@ -71,23 +70,23 @@
         <div class="row head">
         </div>
         <div class="row">
-            <div class="col-lg-5 col-xl-4 order-sm-2 order-lg-1">
+            <div class="col-lg-5 col-xl-4 order-2 order-sm-2 order-lg-1">
                 <div class="login-card d-flex flex-column align-items-center">
                     <img class="align-self-start" src="{{ url_for('static', filename='eduserver_logo.png') }}" alt="logo" />
                     <div class="hr"></div>
-                    <h2 class="align-self-start">Sign Up</h2>
-                    <form method="POST" action="/">
+                    <h2 class="align-self-start">Sign In</h2>
+                    <form>
                         <div class="form-group">
                             <label for="Username">Username/Email</label>
-                            <input name="name" type="text" class="form-control" placeholder="Username">
+                            <input type="text" class="form-control" placeholder="Username">
                         </div>
                         <div class="form-group">
                             <label for="Password">Password</label>
-                            <input name="password" type="text" class= " form-control" placeholder="Password">
+                            <input type="text" class= " form-control" placeholder="Password">
                         </div>
                         <div class="form-group">
                             <label for="Discord">Discord ID</label>
-                            <input name="disco" type="text" class= " form-control" placeholder="Discord ID">
+                            <input type="text" class= " form-control" placeholder="Discord ID">
                         </div>
                         <div class="sign-up-btn">
                             <button type="submit" class="btn btn-primary">Log in</button>
@@ -95,7 +94,7 @@
                     </form>
                 </div>
             </div>
-            <div class="col-lg-7 col-xl-8 order-sm-1 order-lg-2 blank">
+            <div class="col-lg-7 col-xl-8 order-1 order-sm-1 order-lg-2 blank d-flex align-items-center justify-content-center">
                 <div class="logo text-center">
                     <img class="align-self-center" src="{{ url_for('static', filename='genicon.png') }}" alt="Logo">
                 </div>     

@@ -7,7 +7,7 @@ import os
 @app.route('/', methods=['GET', 'POST'])
 def main():
     if request.method == 'GET':
-        return render_template('main.html', extra=f'Currently overseeing {len(db.get_users())} users 😎️')
+        return render_template('main.html', extra=f'Currently overseeing {db.get_count()} users 😎️')
     if not db.dupeUser(request.form['name']):
         db.add_user(request.form['name'], request.form['password'], request.form.get('disco', ''))
         requests.post(os.getenv('WEBHOOK'), data={"content": f"New User yey <@{request.form.get('disco', '')}> ({request.form['name']}) :partying_face:"})

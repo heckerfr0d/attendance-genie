@@ -3,3 +3,4 @@ asyncio
 beautifulsoup4
 psycopg2
 requests
+cryptography

@@ -2,3 +2,4 @@ flask
 gunicorn
 psycopg2
 requests
+cryptography

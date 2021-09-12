@@ -27,6 +27,11 @@ def load_users(users):
     conn.executemany(
         "INSERT INTO users (id, username, password, disco) VALUES (?, ?, ?, ?)", users)
 
+def get_users():
+    cur = conn.cursor()
+    cur.execute("SELECT id, username, password, disco FROM users")
+    return cur.fetchall()
+
 # get all unmarked attendance
 
 

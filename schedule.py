@@ -44,13 +44,8 @@ def get_schedule():
 
 
 def schedule(uid, time, link):
-    try:
-        conn.execute("INSERT INTO schedule (uid, time, link, marked, tries) VALUES (?, ?, ?, ?, ?)",
-                     (uid, time, link, False, 0))
-    except:
-        conn.rollback()
-        conn.execute(
-            "UPDATE schedule SET time=(?) WHERE uid=(?) and link=(?)", (time, uid, link))
+    conn.execute("INSERT OR REPLACE INTO schedule (uid, time, link, marked, tries) VALUES (?, ?, ?, ?, ?)",
+                    (uid, time, link, False, 0))
     conn.commit()
 
 # clear schedule

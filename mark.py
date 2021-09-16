@@ -61,36 +61,19 @@ async def loop(schedules):
     now = datetime.now()
 
     async def mark1(uid, username, password, disco, link, tries):
-        try:
-            expired = await utilities.expired(sessions[uid])
-            if expired:
-                sessions[uid] = await utilities.get_session(username, password)
-        except:
-            return
+        expired = await utilities.expired(sessions[uid])
+        if expired:
+            sessions[uid] = await utilities.get_session(username, password)
         session = sessions[uid]
-        try:
-            async with session.get("https://eduserver.nitc.ac.in/mod/attendance/view.php?id="+link) as response:
-                r = await response.text()
-        except:
-            await session.post(
-                        webHook,
-                        json={"content": username+" aiohttp failed(findlink)"}
-                    )
-            return
+        async with session.get("https://eduserver.nitc.ac.in/mod/attendance/view.php?id="+link) as response:
+            r = await response.text()
 
         # find submit link
         search = submit.search(r)
         if search:
             submiturl = search.group(0)
-            try:
-                async with session.get("https://eduserver.nitc.ac.in/" + submiturl) as resp:
-                    r = await resp.text()
-            except:
-                await session.post(
-                            webHook,
-                            json={"content": username+" aiohttp failed(findlink2)"}
-                        )
-                return
+            async with session.get("https://eduserver.nitc.ac.in/" + submiturl) as resp:
+                r = await resp.text()
 
             # find Present/Excused
             soup = BeautifulSoup(r, 'html.parser')
@@ -112,68 +95,34 @@ async def loop(schedules):
                 }
 
                 # submit
-                try:
-                    r = await session.post(
-                        'https://eduserver.nitc.ac.in/mod/attendance/attendance.php',
-                        data=data
-                    )
-                except:
-                    await session.post(
-                                webHook,
-                                json={"content": username+" aiohttp failed(submit)"}
-                            )
-                    return
+                r = await session.post(
+                    'https://eduserver.nitc.ac.in/mod/attendance/attendance.php',
+                    data=data
+                )
                 db.update(uid, link, r.status==200, tries+1)
                 msg = f"Got <@{disco}>'s `{course}`." if disco else f"Got {username}'s {course}."
-                try:
+                r2 = await session.post(
+                    webHook,
+                    json={"content": msg}
+                )
+                # set marked
+                while r2.status != 204:
                     r2 = await session.post(
                         webHook,
                         json={"content": msg}
                     )
-                except:
-                    r2 = await session.post(
-                                webHook,
-                                json={"content": username+" aiohttp failed(message)"}
-                            )
-                # set marked
-                while r2.status != 204:
-                    try:
-                        r2 = await session.post(
-                            webHook,
-                            json={"content": msg}
-                        )
-                    except:
-                        await session.post(
-                                    webHook,
-                                    json={"content": username+" aiohttp failed(findlink)"}
-                                )
-                        return
             else:
                 db.update(uid, link, False, tries+1)
-                try:
-                    await session.post(
-                        webHook,
-                        json={"content": f'{tries+1} fail(s) for <@{disco if disco else username}>\'s {course}'}
-                    )
-                except:
-                    await session.post(
-                                webHook,
-                                json={"content": username+" aiohttp failed(findlink)"}
-                            )
-                    return
-        else:
-            db.update(uid, link, False, tries+1)
-            try:
                 await session.post(
                     webHook,
-                    json={"content": f'{tries+1} fail(s) for <@{disco if disco else username}>'}
+                    json={"content": f'{tries+1} fail(s) for <@{disco if disco else username}>\'s {course}'}
                 )
-            except:
-                await session.post(
-                            webHook,
-                            json={"content": username+" aiohttp failed(findlink)"}
-                        )
-                return
+        else:
+            db.update(uid, link, False, tries+1)
+            await session.post(
+                webHook,
+                json={"content": f'{tries+1} fail(s) for <@{disco if disco else username}>'}
+            )
         # await session.close()
 
     cors = [mark1(uid, username, password, disco, link, tries) for uid, username, password, disco, time, link, tries in schedules if time <= now]

@@ -44,7 +44,7 @@ def get_schedule():
 
 
 def schedule(uid, time, link):
-    conn.execute("INSERT OR REPLACE INTO schedule (uid, time, link, marked, tries) VALUES (?, ?, ?, ?, ?)",
+    conn.execute("INSERT OR IGNORE INTO schedule (uid, time, link, marked, tries) VALUES (?, ?, ?, ?, ?)",
                     (uid, time, link, False, 0))
     conn.commit()
 

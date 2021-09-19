@@ -23,9 +23,9 @@ def dupeUser(username):
     return cur.fetchone()
 
 # new signup yey
-def add_user(username, password, disco=None):
+def add_user(username, password, whatsapp=None):
     cur = conn.cursor()
-    cur.execute("INSERT INTO users (username, password, disco) VALUES (%s, %s, %s)", (username, fernet.encrypt(password.encode()).decode(), disco))
+    cur.execute("INSERT INTO users (username, password, whatsapp) VALUES (%s, %s, %s)", (username, fernet.encrypt(password.encode()).decode(), whatsapp))
     conn.commit()
     cur.close()
 

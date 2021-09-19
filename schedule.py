@@ -8,7 +8,8 @@ conn.execute('''
         id INTEGER PRIMARY KEY,
         username VARCHAR(10) UNIQUE NOT NULL,
         password VARCHAR(32) NOT NULL,
-        disco VARCHAR(19)
+        disco VARCHAR(19),
+        whatsapp VARCHAR(15)
     )
 ''')
 conn.execute('''
@@ -25,11 +26,11 @@ conn.execute('''
 
 def load_users(users):
     conn.executemany(
-        "INSERT INTO users (id, username, password, disco) VALUES (?, ?, ?, ?)", users)
+        "INSERT INTO users (id, username, password, disco, whatsapp) VALUES (?, ?, ?, ?, ?)", users)
 
 def get_users():
     cur = conn.cursor()
-    cur.execute("SELECT id, username, password, disco FROM users")
+    cur.execute("SELECT id, username, password, disco, whatsapp FROM users")
     return cur.fetchall()
 
 # get all unmarked attendance
@@ -37,7 +38,7 @@ def get_users():
 
 def get_schedule():
     cur = conn.cursor()
-    cur.execute("SELECT s.uid, u.username, u.password, u.disco, s.time, s.link, s.tries FROM schedule s, users u WHERE (s.uid=u.id and s.tries<3 and s.marked=FALSE) ORDER BY time")
+    cur.execute("SELECT s.uid, u.username, u.password, u.disco, u.whatsapp, s.time, s.link, s.tries FROM schedule s, users u WHERE (s.uid=u.id and s.tries<3 and s.marked=FALSE) ORDER BY time")
     return cur.fetchall()
 
 # add to schedule
@@ -53,6 +54,7 @@ def schedule(uid, time, link):
 
 def clear():
     conn.execute("DELETE FROM schedule")
+    conn.execute("DELETE FROM users")
     conn.commit()
     conn.close()
 

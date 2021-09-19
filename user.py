@@ -8,6 +8,6 @@ fernet = Fernet(os.getenv('SECRET_KEY'))
 # get username, password list
 def get_users():
     cur = conn.cursor()
-    cur.execute("SELECT id, username, password, disco FROM users")
-    return [(id, username, fernet.decrypt(password.encode()).decode(), disco) for id, username, password, disco in cur.fetchall()]
+    cur.execute("SELECT id, username, password, disco, whatsapp FROM users")
+    return [(id, username, fernet.decrypt(password.encode()).decode(), disco, whatsapp) for id, username, password, disco, whatsapp in cur.fetchall()]
 

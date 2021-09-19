@@ -12,6 +12,10 @@ import os
 
 # ist = pytz.timezone('Asia/Kolkata')
 webHook = os.getenv('WEBHOOK')
+# are these right?
+# TWILIO_ACCOUNT_SID = os.getenv('TWILIO_ACCOUNT_SID')
+# TWILIO_AUTH_TOKEN = os.getenv('TWILIO_AUTH_TOKEN')
+# twilio_url = "https://api.twilio.com/2010-04-01/Accounts/" + TWILIO_ACCOUNT_SID + "/Messages.json"
 submit = re.compile(r'mod\/attendance\/attendance.php\?sessid=(\d{5})&amp;sesskey=(\w{10})')
 sessions = {}
 
@@ -53,14 +57,14 @@ async def crawl():
             db.schedule(uid, time, link)
         # await sess.close()
 
-    tasks = [oneiter(uid, username, password) for uid, username, password, disco in users]
+    tasks = [oneiter(uid, username, password) for uid, username, password, disco, whatsapp in users]
     await asyncio.gather(*tasks)
 
 async def loop(schedules):
     # now = pytz.utc.localize(datetime.utcnow()).astimezone(ist)
-    now = datetime.now()
+    # now = datetime.now()
 
-    async def mark1(uid, username, password, disco, link, tries):
+    async def mark1(uid, username, password, disco, whatsapp, link, tries):
         expired = await utilities.expired(sessions[uid])
         if expired:
             sessions[uid] = await utilities.get_session(username, password)
@@ -77,7 +81,7 @@ async def loop(schedules):
 
             # find Present/Excused
             soup = BeautifulSoup(r, 'html.parser')
-            course = soup.find("h1").string
+            course = ' '.join(soup.find("h1").string.split()[1:])
             present_span = soup.find("span", class_="statusdesc", string="Present")
             if not present_span:
                 present_span = soup.find("span", class_="statusdesc", string="Excused")
@@ -100,17 +104,27 @@ async def loop(schedules):
                     data=data
                 )
                 db.update(uid, link, r.status==200, tries+1)
+
+                # whatsapp notif here.
+                # data = {
+                #     'From': 'whatsapp:+14155238886',
+                #     'Body': f'Marked {course}',
+                #     'To': f'whatsapp:{whatsapp}'
+                # }
+                # await session.post(twilio_url, data=data, auth=(TWILIO_ACCOUNT_SID, TWILIO_AUTH_TOKEN))
+                # something like this?
+
                 msg = f"Got <@{disco}>'s `{course}`." if disco else f"Got {username}'s {course}."
                 r2 = await session.post(
                     webHook,
                     json={"content": msg}
                 )
                 # set marked
-                while r2.status != 204:
-                    r2 = await session.post(
-                        webHook,
-                        json={"content": msg}
-                    )
+                # while r2.status != 204:
+                #     r2 = await session.post(
+                #         webHook,
+                #         json={"content": msg}
+                #     )
             else:
                 db.update(uid, link, False, tries+1)
                 await session.post(
@@ -125,13 +139,12 @@ async def loop(schedules):
             )
         # await session.close()
 
-    cors = [mark1(uid, username, password, disco, link, tries) for uid, username, password, disco, time, link, tries in schedules if time <= now]
+    cors = [mark1(uid, username, password, disco, whatsapp, link, tries) for uid, username, password, disco, whatsapp, time, link, tries in schedules if time <= now]
     await asyncio.gather(*cors)
 
 async def init():
-    global genie
     users = user.get_users()
-    for id, username, password, disco in users:
+    for id, username, password, disco, whatsapp in users:
         try:
             sessions[id] = await utilities.get_session(username, password)
         except:

@@ -181,6 +181,6 @@ if __name__=="__main__":
             db.clear()
             exit(0)
         # mark if schedule exists
-        if schedules and schedules[0][4] <= now:
+        if schedules and schedules[0][5] <= now:
             lp.run_until_complete(loop(schedules))
             schedules = db.get_schedule()

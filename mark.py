@@ -15,7 +15,7 @@ webHook = os.getenv('WEBHOOK')
 
 TWILIO_ACCOUNT_SID = os.getenv('TWILIO_ACCOUNT_SID')
 TWILIO_AUTH_TOKEN = os.getenv('TWILIO_AUTH_TOKEN')
-twilio_url = "https://api.twilio.com/2010-04-01/Accounts/" + TWILIO_ACCOUNT_SID + "/Messages.json"
+twilio_url = "https://"+TWILIO_ACCOUNT_SID+':'+TWILIO_AUTH_TOKEN+"@api.twilio.com/2010-04-01/Accounts/" + TWILIO_ACCOUNT_SID + "/Messages.json"
 submit = re.compile(r'mod\/attendance\/attendance.php\?sessid=(\d{5})&amp;sesskey=(\w{10})')
 sessions = {}
 
@@ -111,7 +111,7 @@ async def loop(schedules):
                      'Body': f'Marked {course}',
                      'To': f'whatsapp:{whatsapp}'
                  }
-                await session.post(twilio_url, data=data, auth=(TWILIO_ACCOUNT_SID, TWILIO_AUTH_TOKEN))
+                await session.post(twilio_url, data=data)
                 
 
                 msg = f"Got <@{disco}>'s `{course}`." if disco else f"Got {username}'s {course}."
@@ -137,7 +137,7 @@ async def loop(schedules):
                     'Body': f'Failed to Mark {course} :(',
                     'To': f'whatsapp:{whatsapp}'
                 }
-                await session.post(twilio_url, data=data, auth=(TWILIO_ACCOUNT_SID,TWILIO_AUTH_TOKEN))
+                await session.post(twilio_url, data=data)
         else:
             db.update(uid, link, False, tries+1)
             await session.post(

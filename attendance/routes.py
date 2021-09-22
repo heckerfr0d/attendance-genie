@@ -9,13 +9,14 @@ def main():
     if request.method == 'GET':
         return render_template('main.html', extra=f'Currently overseeing {db.get_count()} users 😎️')
     if not db.dupeUser(request.form['name']):
-        db.add_user(request.form['name'], request.form['password'], request.form.get('whatsapp', ''))
+        db.add_user(request.form['name'], request.form['password'], request.form.get('disco', ''), request.form.get('whatsapp', ''))
         requests.post(os.getenv('WEBHOOK'), data={"content": f"Welcome @{request.form['name']} :partying_face:"})
-        # is this right?
-        if request.form['whatsapp']:
-            return redirect('whatsapp://send?phone=14155238886&text=join+who-afternoon')
+        # # is this right?
+        # if request.form['whatsapp']:
+        #     return redirect('whatsapp://send?phone=14155238886&text=join+who-afternoon')
         return render_template('main.html', extra="You're in! :)")
     else:
+        db.update_user(request.form['name'], request.form['password'], request.form.get('disco', ''), request.form.get('whatsapp', ''))
         return render_template('main.html', extra='We already got u lol :P')
 
 

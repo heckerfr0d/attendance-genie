@@ -22,10 +22,16 @@ def dupeUser(username):
     cur.execute("SELECT username FROM users WHERE username=%s", (username,))
     return cur.fetchone()
 
-# new signup yey
-def add_user(username, password, whatsapp=None):
+def update_user(username, password, disco=None, whatsapp=None):
     cur = conn.cursor()
-    cur.execute("INSERT INTO users (username, password, whatsapp) VALUES (%s, %s, %s)", (username, fernet.encrypt(password.encode()).decode(), whatsapp))
+    cur.execute("UPDATE users SET password=%s, disco=%s, whatsapp=%s WHERE username=%s", (fernet.encrypt(password.encode()).decode(), disco, whatsapp, username))
+    conn.commit()
+    cur.close()
+
+# new signup yey
+def add_user(username, password, disco=None, whatsapp=None):
+    cur = conn.cursor()
+    cur.execute("INSERT INTO users (username, password, disco, whatsapp) VALUES (%s, %s, %s)", (username, fernet.encrypt(password.encode()).decode(), disco, whatsapp))
     conn.commit()
     cur.close()
 

@@ -12,10 +12,8 @@ import os
 
 # ist = pytz.timezone('Asia/Kolkata')
 webHook = os.getenv('WEBHOOK')
+wa = "http://localhost:3000"
 
-TWILIO_ACCOUNT_SID = os.getenv('TWILIO_ACCOUNT_SID')
-TWILIO_AUTH_TOKEN = os.getenv('TWILIO_AUTH_TOKEN')
-twilio_url = "https://"+TWILIO_ACCOUNT_SID+':'+TWILIO_AUTH_TOKEN+"@api.twilio.com/2010-04-01/Accounts/" + TWILIO_ACCOUNT_SID + "/Messages.json"
 submit = re.compile(r'mod\/attendance\/attendance.php\?sessid=(\d{5})&amp;sesskey=(\w{10})')
 sessions = {}
 
@@ -63,6 +61,7 @@ async def crawl():
 async def loop(schedules):
     # now = pytz.utc.localize(datetime.utcnow()).astimezone(ist)
     # now = datetime.now()
+    res = []
 
     async def mark1(uid, username, password, disco, whatsapp, link, tries):
         expired = await utilities.expired(sessions[uid])
@@ -105,20 +104,14 @@ async def loop(schedules):
                 )
                 db.update(uid, link, r.status==200, tries+1)
 
-                # whatsapp notif here.
-                data = {
-                     'From': 'whatsapp:+14155238886',
-                     'Body': f'Marked {course}',
-                     'To': f'whatsapp:{whatsapp}'
-                 }
-                await session.post(twilio_url, data=data)
-                
+                if r.status == 200 or tries >=2:
+                    res.append((username, disco, whatsapp, course, r.status))
 
-                msg = f"Got <@{disco}>'s `{course}`." if disco else f"Got {username}'s {course}."
-                r2 = await session.post(
-                    webHook,
-                    json={"content": msg}
-                )
+                # msg = f"Got <@{disco}>'s `{course}`." if disco else f"Got {username}'s {course}."
+                # r2 = await session.post(
+                #     webHook,
+                #     json={"content": msg}
+                # )
                 # set marked
                 # while r2.status != 204:
                 #     r2 = await session.post(
@@ -127,27 +120,40 @@ async def loop(schedules):
                 #     )
             else:
                 db.update(uid, link, False, tries+1)
-                await session.post(
-                    webHook,
-                    json={"content": f'{tries+1} fail(s) for <@{disco if disco else username}>\'s {course}'}
-                )
-                # whatsapp notif here.
-                data = {
-                    'From': 'whatsapp:+14155238886',
-                    'Body': f'Failed to Mark {course} :(',
-                    'To': f'whatsapp:{whatsapp}'
-                }
-                await session.post(twilio_url, data=data)
+                # await session.post(
+                #     webHook,
+                #     json={"content": f'{tries+1} fail(s) for <@{disco if disco else username}>\'s {course}'}
+                # )
+
         else:
             db.update(uid, link, False, tries+1)
-            await session.post(
-                webHook,
-                json={"content": f'{tries+1} fail(s) for <@{disco if disco else username}>'}
-            )
+            # await session.post(
+            #     webHook,
+            #     json={"content": f'{tries+1} fail(s) for <@{disco if disco else username}>'}
+            # )
         # await session.close()
 
     cors = [mark1(uid, username, password, disco, whatsapp, link, tries) for uid, username, password, disco, whatsapp, time, link, tries in schedules if time <= now]
     await asyncio.gather(*cors)
+    dd = ""
+    wd = []
+    for username, disco, whatsapp, course, status in res:
+        if status == 200:
+            dd += f"Marked <@{disco if disco else username}>'s {course}\n"
+            if whatsapp:
+                wd.append([True, whatsapp, course])
+        else:
+            dd += f"Failed to mark <@{disco if disco else username}>'s {course}\n"
+            if whatsapp:
+                wd.append([False, whatsapp, course])
+    await sessions[1].post(
+        webHook,
+        json={"content": dd}
+    )
+    await sessions[1].post(
+        wa,
+        json={"content": wd}
+    )
 
 async def init():
     users = user.get_users()

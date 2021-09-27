@@ -15,6 +15,7 @@ webHook = os.getenv('WEBHOOK')
 wa = "http://localhost:3000"
 
 submit = re.compile(r'mod\/attendance\/attendance.php\?sessid=(\d{5})&amp;sesskey=(\w{10})')
+coursere = re.compile(r'<h1>([\w\d\s]*)</h1>')
 sessions = {}
 
 async def crawl():
@@ -73,6 +74,7 @@ async def loop(schedules):
 
         # find submit link
         search = submit.search(r)
+        course = ' '.join(coursere.search(r).group(0).split()[1:])
         if search:
             submiturl = search.group(0)
             async with session.get("https://eduserver.nitc.ac.in/" + submiturl) as resp:
@@ -80,7 +82,7 @@ async def loop(schedules):
 
             # find Present/Excused
             soup = BeautifulSoup(r, 'html.parser')
-            course = ' '.join(soup.find("h1").string.split()[1:])
+            # course = ' '.join(soup.find("h1").string.split()[1:])
             present_span = soup.find("span", class_="statusdesc", string="Present")
             if not present_span:
                 present_span = soup.find("span", class_="statusdesc", string="Excused")
@@ -120,6 +122,8 @@ async def loop(schedules):
                 #     )
             else:
                 db.update(uid, link, False, tries+1)
+                if tries >=2:
+                    res.append((username, disco, whatsapp, course, 400))
                 # await session.post(
                 #     webHook,
                 #     json={"content": f'{tries+1} fail(s) for <@{disco if disco else username}>\'s {course}'}
@@ -127,6 +131,8 @@ async def loop(schedules):
 
         else:
             db.update(uid, link, False, tries+1)
+            if tries >=2:
+                    res.append((username, disco, whatsapp, course, 404))
             # await session.post(
             #     webHook,
             #     json={"content": f'{tries+1} fail(s) for <@{disco if disco else username}>'}
@@ -135,33 +141,39 @@ async def loop(schedules):
 
     cors = [mark1(uid, username, password, disco, whatsapp, link, tries) for uid, username, password, disco, whatsapp, time, link, tries in schedules if time <= now]
     await asyncio.gather(*cors)
-    dd = ""
-    wd = []
+    ds = {}
+    df = {}
+    payloads = ["", "", []]
     for username, disco, whatsapp, course, status in res:
         if status == 200:
-            dd += f"Marked <@{disco if disco else username}>'s {course}\n"
+            # dd += f"Marked <@{disco if disco else username}>'s {course}\n"
+            ds[course] = ds.get(course, []).append('<@'+disco+'>' if disco else username)
             if whatsapp:
-                wd.append([True, whatsapp, course])
+                payloads[2].append([True, whatsapp, course])
         else:
-            dd += f"Failed to mark <@{disco if disco else username}>'s {course}\n"
+            # dd += f"Failed to mark <@{disco if disco else username}>'s {course}\n"
+            df[course] = df.get(course, []).append('<@'+disco+'>' if disco else username)
             if whatsapp:
-                wd.append([False, whatsapp, course])
-    await sessions[1].post(
-        webHook,
-        json={"content": dd}
-    )
-    await sessions[1].post(
-        wa,
-        json={"content": wd}
-    )
+                payloads[2].append([False, whatsapp, course])
+    for course in ds:
+        payloads[0] += f"Marked {course} for {' '.join(ds[course])}\n"
+    for course in df:
+        payloads[1] += f"Marked {course} for {' '.join(ds[course])}\n"
+
+    async def notify(url, payload):
+        await sessions[1].post(
+            url,
+            json={"content": payload}
+        )
+    tasks = [notify(url, payload) for url, payload in zip([webHook, webHook, wa], payloads)]
+    await asyncio.gather(*tasks)
 
 async def init():
     users = user.get_users()
-    for id, username, password, disco, whatsapp in users:
-        try:
-            sessions[id] = await utilities.get_session(username, password)
-        except:
-            sessions[id] = None
+    async def get_ses(id, username, password):
+        sessions[id] = await utilities.get_session(username, password)
+    cors = [get_ses(id, username, password) for id, username, password, disco, whatsapp in users]
+    await asyncio.gather(*cors)
     db.load_users(users)
 
 if __name__=="__main__":

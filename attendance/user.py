@@ -31,7 +31,7 @@ def update_user(username, password, disco=None, whatsapp=None):
 # new signup yey
 def add_user(username, password, disco=None, whatsapp=None):
     cur = conn.cursor()
-    cur.execute("INSERT INTO users (username, password, disco, whatsapp) VALUES (%s, %s, %s)", (username, fernet.encrypt(password.encode()).decode(), disco, whatsapp))
+    cur.execute("INSERT INTO users (username, password, disco, whatsapp) VALUES (%s, %s, %s, %s)", (username, fernet.encrypt(password.encode()).decode(), disco, whatsapp))
     conn.commit()
     cur.close()
 

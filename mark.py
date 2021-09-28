@@ -147,18 +147,20 @@ async def loop(schedules):
     for username, disco, whatsapp, course, status in res:
         if status == 200:
             # dd += f"Marked <@{disco if disco else username}>'s {course}\n"
-            ds[course] = ds.get(course, []).append('<@'+disco+'>' if disco else username)
+            ds[course] = ds.get(course, [])
+            ds[course].append('<@'+disco+'>' if disco else username)
             if whatsapp:
                 payloads[2].append([True, whatsapp, course])
         else:
             # dd += f"Failed to mark <@{disco if disco else username}>'s {course}\n"
-            df[course] = df.get(course, []).append('<@'+disco+'>' if disco else username)
+            df[course] = df.get(course, [])
+            df[course].append('<@'+disco+'>' if disco else username)
             if whatsapp:
                 payloads[2].append([False, whatsapp, course])
     for course in ds:
         payloads[0] += f"Marked {course} for {' '.join(ds[course])}\n"
     for course in df:
-        payloads[1] += f"Marked {course} for {' '.join(ds[course])}\n"
+        payloads[1] += f"Failed to mark {course} for {' '.join(df[course])}\n"
 
     async def notify(url, payload):
         await sessions[1].post(

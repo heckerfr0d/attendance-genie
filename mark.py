@@ -74,7 +74,9 @@ async def loop(schedules):
 
         # find submit link
         search = submit.search(r)
-        course = ' '.join(coursere.search(r).group(0).split()[1:])
+        course = coursere.search(r)
+        if course:
+            course = ' '.join(course.group(1).split()[1:])
         if search:
             submiturl = search.group(0)
             async with session.get("https://eduserver.nitc.ac.in/" + submiturl) as resp:

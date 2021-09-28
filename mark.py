@@ -15,7 +15,7 @@ webHook = os.getenv('WEBHOOK')
 wa = "http://localhost:3000"
 
 submit = re.compile(r'mod\/attendance\/attendance.php\?sessid=(\d{5})&amp;sesskey=(\w{10})')
-coursere = re.compile(r'<h1>([\w\d\s]*)</h1>')
+coursere = re.compile(r'<h1>([\w\s]*)[\w\s\(\)-]*</h1>')
 sessions = {}
 
 async def crawl():
@@ -96,6 +96,7 @@ async def loop(schedules):
                     "status":  present_status,
                     "sessid": sessid,
                     "sesskey": sesskey,
+                    "studentpassword": "12345",
                     "_qf__mod_attendance_student_attendance_form": "1",
                     "mform_isexpanded_id_session": "1",
                     "submitbutton": "Save+changes"

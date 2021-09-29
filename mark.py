@@ -96,6 +96,7 @@ async def loop(schedules):
                     "status":  present_status,
                     "sessid": sessid,
                     "sesskey": sesskey,
+                    "sesskey": sesskey,
                     "studentpassword": "12345",
                     "_qf__mod_attendance_student_attendance_form": "1",
                     "mform_isexpanded_id_session": "1",

@@ -108,9 +108,9 @@ async def loop(schedules):
                     'https://eduserver.nitc.ac.in/mod/attendance/attendance.php',
                     data=data
                 )
-                db.update(uid, link, r.status==200, tries+1)
+                db.update(uid, link, r.status==200 or r.status==303, tries+1)
 
-                if r.status == 200 or tries >=2:
+                if r.status == 200 or r.status==303 or tries >=2:
                     res.append((username, disco, whatsapp, course, r.status))
 
                 # msg = f"Got <@{disco}>'s `{course}`." if disco else f"Got {username}'s {course}."
@@ -149,7 +149,7 @@ async def loop(schedules):
     df = {}
     payloads = ["", "", []]
     for username, disco, whatsapp, course, status in res:
-        if status == 200:
+        if status == 200 or status == 303:
             # dd += f"Marked <@{disco if disco else username}>'s {course}\n"
             ds[course] = ds.get(course, [])
             ds[course].append('<@'+disco+'>' if disco else username)

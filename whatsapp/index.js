@@ -52,7 +52,7 @@ client.on('qr', qr => {
 
 client.on('ready', () => {
     console.log('Client is ready!');
-    client.sendMessage("918592988798@c.us", "Hello!");
+    // client.sendMessage("918592988798@c.us", "Hello!");
 });
 
 client.initialize();

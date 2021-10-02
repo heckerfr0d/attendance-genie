@@ -17,19 +17,21 @@ wa = "http://localhost:3000"
 submit = re.compile(r'mod\/attendance\/attendance.php\?sessid=(\d{5})&amp;sesskey=(\w{10})')
 coursere = re.compile(r'<h1>([\w\s]*)[\w\s\(\)-]*</h1>')
 sessions = {}
+users = []
 
 async def crawl():
-    global sessions
-    users = db.get_users()
+    global sessions, users
+    # users = db.get_users()
 
-    async def oneiter(uid, username, password):
+    # async def oneiter(uid, username, password):
+    async def oneiter(uid):
         global sessions
-        try:
-            expired = await utilities.expired(sessions[uid])
-            if expired:
-                sessions[uid] = await utilities.get_session(username, password)
-        except:
-            return
+        # try:
+        #     expired = await utilities.expired(sessions[uid])
+        #     if expired:
+        #         sessions[uid] = await utilities.get_session(username, password)
+        # except:
+        #     return
         sess = sessions[uid]
 
         # get calendar page
@@ -56,7 +58,8 @@ async def crawl():
             db.schedule(uid, time, link)
         # await sess.close()
 
-    tasks = [oneiter(uid, username, password) for uid, username, password, disco, whatsapp in users]
+    # tasks = [oneiter(uid, username, password) for uid, username, password, disco, whatsapp in users]
+    tasks = [oneiter(uid) for uid in sessions]
     await asyncio.gather(*tasks)
 
 async def loop(schedules):
@@ -65,9 +68,9 @@ async def loop(schedules):
     res = []
 
     async def mark1(uid, username, password, disco, whatsapp, link, tries):
-        expired = await utilities.expired(sessions[uid])
-        if expired:
-            sessions[uid] = await utilities.get_session(username, password)
+        # expired = await utilities.expired(sessions[uid])
+        # if expired:
+        #     sessions[uid] = await utilities.get_session(username, password)
         session = sessions[uid]
         async with session.get("https://eduserver.nitc.ac.in/mod/attendance/view.php?id="+link) as response:
             r = await response.text()
@@ -96,8 +99,7 @@ async def loop(schedules):
                     "status":  present_status,
                     "sessid": sessid,
                     "sesskey": sesskey,
-                    "sesskey": sesskey,
-                    "studentpassword": "12345",
+                    "studentpassword": "123",
                     "_qf__mod_attendance_student_attendance_form": "1",
                     "mform_isexpanded_id_session": "1",
                     "submitbutton": "Save+changes"
@@ -175,7 +177,8 @@ async def loop(schedules):
     await asyncio.gather(*tasks)
 
 async def init():
-    users = user.get_users()
+    global sessions, users
+    # users = user.get_users()
     async def get_ses(id, username, password):
         sessions[id] = await utilities.get_session(username, password)
     cors = [get_ses(id, username, password) for id, username, password, disco, whatsapp in users]
@@ -183,6 +186,7 @@ async def init():
     db.load_users(users)
 
 if __name__=="__main__":
+    users = user.get_users()
     lp = asyncio.get_event_loop()
     lp.run_until_complete(init())
     lp.run_until_complete(crawl())

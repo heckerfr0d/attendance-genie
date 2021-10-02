@@ -20,7 +20,7 @@ sessions = {}
 users = []
 
 async def crawl():
-    global sessions, users
+    global sessions
     # users = db.get_users()
 
     # async def oneiter(uid, username, password):

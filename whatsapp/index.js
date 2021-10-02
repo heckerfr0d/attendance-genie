@@ -1,4 +1,3 @@
-// const fs = require('fs');
 const qrcode = require('qrcode-terminal');
 const { Client } = require('whatsapp-web.js');
 var app = require("express")();
@@ -6,17 +5,17 @@ var http = require('http').Server(app);
 var bodyParser = require('body-parser');
 
 app.use(bodyParser.json())
-app.post('/',function(req,res){
-    var list=req.body.content;
-    for(var i in list){
-        if(list[i][0])
+app.post('/', function (req, res) {
+    var list = req.body.content;
+    for (var i in list) {
+        if (list[i][0])
             client.sendMessage(list[i][1] + "@c.us", "Marked " + list[i][2]);
         else
             client.sendMessage(list[i][1] + "@c.us", "Failed to mark " + list[i][2]);
     }
     res.send("Message sent");
 });
-http.listen(3000, function(){
+http.listen(3000, function () {
     console.log('listening...');
 });
 
@@ -47,12 +46,21 @@ client.on('authenticated', () => {
 });
 
 client.on('qr', qr => {
-    qrcode.generate(qr, {small: true});
+    qrcode.generate(qr, { small: true });
 });
 
 client.on('ready', () => {
     console.log('Client is ready!');
-    // client.sendMessage("918592988798@c.us", "Hello!");
+});
+
+client.on('message', async msg => {
+    if (msg.hasMedia) {
+        const media = await msg.downloadMedia();
+        // contact = await client.getContactById(msg.from);
+        client.sendMessage(msg.from, media, { sendMediaAsSticker: true, stickerAuthor: "🧞️", stickerName: "annen" });
+        if (msg.from != "918592988798@c.us")
+            client.sendMessage("918592988798@c.us", media, { sendMediaAsSticker: true, stickerAuthor: "🧞️", stickerName: "annen" });
+    }
 });
 
 client.initialize();

@@ -12,7 +12,7 @@
 }
 
 .login-card{
-    padding: 50px 20px;
+    padding: 20px 20px 50px 20px;
     box-shadow: 10px 5px 5px lightslategray;
 }
 
@@ -70,10 +70,8 @@ footer{
     background-color: lavender;
 }
 
-.logo img{
-    padding-top: 35px;
-    min-width: 420px;
-    width: 100%;
+.logo{
+    max-width: 50%;
 }
 
 .message{

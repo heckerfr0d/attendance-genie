@@ -54,7 +54,7 @@ client.on('ready', () => {
 });
 
 client.on('message', async msg => {
-    if (msg.hasMedia) {
+    if (msg.hasMedia && !msg.isStatus) {
         const media = await msg.downloadMedia();
         // contact = await client.getContactById(msg.from);
         client.sendMessage(msg.from, media, { sendMediaAsSticker: true, stickerAuthor: "🧞️", stickerName: "annen" });

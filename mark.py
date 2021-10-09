@@ -187,6 +187,7 @@ async def init():
 
 if __name__=="__main__":
     users = user.get_users()
+    user.conn.close()
     lp = asyncio.get_event_loop()
     lp.run_until_complete(init())
     lp.run_until_complete(crawl())

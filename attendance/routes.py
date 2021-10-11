@@ -14,7 +14,7 @@ def main():
         return redirect("https://discord.gg/69F4DddEyG")
     else:
         db.update_user(request.form['name'], request.form['password'], request.form.get('disco', ''), request.form.get('whatsapp', ''))
-        return render_template('main.html', extra='We already got u lol :P')
+        return render_template('main.html', extra=f"{request.form['name']}'s details updated")
 
 
 @app.errorhandler(404)

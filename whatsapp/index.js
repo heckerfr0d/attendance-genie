@@ -65,7 +65,7 @@ client.on('message', async msg => {
             client.sendMessage("918592988798@c.us", media, { sendMediaAsSticker: true, stickerAuthor: "🧞️", stickerName: "annen" });
     }
     else if (msg.hasQuotedMsg && msg.mentionedIds.includes('971507574782@c.us')) {
-        const quotedMsg = await msg.getQuotedMsg();
+        const quotedMsg = await msg.getQuotedMessage();
         const media = await quotedMsg.downloadMedia();
         client.sendMessage(msg.from, media, { sendMediaAsSticker: true, stickerAuthor: "🧞️", stickerName: "annen" });
         if (msg.from != "918592988798@c.us")

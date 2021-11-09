@@ -54,6 +54,7 @@ client.on('ready', () => {
 });
 
 client.on('message', async msg => {
+    console.log(msg.vCards);
     if (msg.hasMedia && !msg.isStatus) {
         const chat = await msg.getChat();
         if (chat.isGroup && !(msg.mentionedIds.includes('971507574782@c.us')))

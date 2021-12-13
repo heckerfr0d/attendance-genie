@@ -13,6 +13,6 @@
     "express": "^4.17.1",
     "http": "^0.0.1-security",
     "qrcode-terminal": "^0.12.0",
-    "whatsapp-web.js": "github:pedroslopez/whatsapp-web.js#multidevice"
+    "whatsapp-web.js": "github:tuyuribr/whatsapp-web.js#patch-10"
   }
 }

@@ -24,7 +24,7 @@ async def crawl():
     # users = db.get_users()
 
     # async def oneiter(uid, username, password):
-    async def oneiter(uid):
+    async def oneiter(username):
         global sessions
         # try:
         #     expired = await utilities.expired(sessions[uid])
@@ -32,7 +32,7 @@ async def crawl():
         #         sessions[uid] = await utilities.get_session(username, password)
         # except:
         #     return
-        sess = sessions[uid]
+        sess = sessions[username]
 
         # get calendar page
         async with sess.get("https://eduserver.nitc.ac.in/calendar/view.php?view=day") as resp:
@@ -55,11 +55,11 @@ async def crawl():
                 continue
             # get link
             link = block.find("a", string="Go to activity").attrs["href"][-5:]
-            db.schedule(uid, time, link)
+            db.schedule(username, time, link)
         # await sess.close()
 
     # tasks = [oneiter(uid, username, password) for uid, username, password, disco, whatsapp in users]
-    tasks = [oneiter(uid) for uid in sessions]
+    tasks = [oneiter(username) for username in sessions]
     await asyncio.gather(*tasks)
 
 async def loop(schedules):
@@ -67,11 +67,11 @@ async def loop(schedules):
     # now = datetime.now()
     res = []
 
-    async def mark1(uid, username, password, disco, whatsapp, link, tries):
+    async def mark1(username, password, disco, whatsapp, link, tries):
         # expired = await utilities.expired(sessions[uid])
         # if expired:
         #     sessions[uid] = await utilities.get_session(username, password)
-        session = sessions[uid]
+        session = sessions[username]
         async with session.get("https://eduserver.nitc.ac.in/mod/attendance/view.php?id="+link) as response:
             r = await response.text()
 
@@ -110,7 +110,7 @@ async def loop(schedules):
                     'https://eduserver.nitc.ac.in/mod/attendance/attendance.php',
                     data=data
                 )
-                db.update(uid, link, r.status==200 or r.status==303, tries+1)
+                db.update(username, link, r.status==200 or r.status==303, tries+1)
 
                 if r.status == 200 or r.status==303 or tries >=2:
                     res.append((username, disco, whatsapp, course, r.status))
@@ -127,7 +127,7 @@ async def loop(schedules):
                 #         json={"content": msg}
                 #     )
             else:
-                db.update(uid, link, False, tries+1)
+                db.update(username, link, False, tries+1)
                 if tries >=2:
                     res.append((username, disco, whatsapp, course, 400))
                 # await session.post(
@@ -136,7 +136,7 @@ async def loop(schedules):
                 # )
 
         else:
-            db.update(uid, link, False, tries+1)
+            db.update(username, link, False, tries+1)
             if tries >=2:
                     res.append((username, disco, whatsapp, course, 404))
             # await session.post(
@@ -145,7 +145,7 @@ async def loop(schedules):
             # )
         # await session.close()
 
-    cors = [mark1(uid, username, password, disco, whatsapp, link, tries) for uid, username, password, disco, whatsapp, time, link, tries in schedules if time <= now]
+    cors = [mark1(username, password, disco, whatsapp, link, tries) for username, password, disco, whatsapp, time, link, tries in schedules if time <= now]
     await asyncio.gather(*cors)
     ds = {}
     df = {}
@@ -169,7 +169,7 @@ async def loop(schedules):
         payloads[1] += f"Failed to mark {course} for {' '.join(df[course])}\n"
 
     async def notify(url, payload):
-        await sessions[1].post(
+        await sessions['B190513CS'].post(
             url,
             json={"content": payload}
         )
@@ -179,9 +179,9 @@ async def loop(schedules):
 async def init():
     global sessions, users
     # users = user.get_users()
-    async def get_ses(id, username, password):
-        sessions[id] = await utilities.get_session(username, password)
-    cors = [get_ses(id, username, password) for id, username, password, disco, whatsapp in users]
+    async def get_ses(username, password):
+        sessions[username] = await utilities.get_session(username, password)
+    cors = [get_ses(username, password) for username, password, disco, whatsapp in users]
     await asyncio.gather(*cors)
     db.load_users(users)
 

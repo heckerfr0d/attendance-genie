@@ -5,8 +5,7 @@ conn.execute('PRAGMA synchronous = OFF')
 # conn.execute('PRAGMA journal_mode = OFF')
 conn.execute('''
     CREATE TABLE users (
-        id INTEGER PRIMARY KEY,
-        username VARCHAR(10) UNIQUE NOT NULL,
+        username VARCHAR(10) PRIMARY KEY,
         password VARCHAR(32) NOT NULL,
         disco VARCHAR(19),
         whatsapp VARCHAR(15)
@@ -14,7 +13,7 @@ conn.execute('''
 ''')
 conn.execute('''
     CREATE TABLE schedule (
-            uid INTEGER REFERENCES users(id) NOT NULL,
+            username VARCHAR(10) REFERENCES users(username) NOT NULL,
             time TIMESTAMP NOT NULL,
             link VARCHAR(6) NOT NULL,
             marked BOOLEAN default FALSE,
@@ -26,11 +25,11 @@ conn.execute('''
 
 def load_users(users):
     conn.executemany(
-        "INSERT INTO users (id, username, password, disco, whatsapp) VALUES (?, ?, ?, ?, ?)", users)
+        "INSERT INTO users (username, password, disco, whatsapp) VALUES (?, ?, ?, ?)", users)
 
 def get_users():
     cur = conn.cursor()
-    cur.execute("SELECT id, username, password, disco, whatsapp FROM users")
+    cur.execute("SELECT username, password, disco, whatsapp FROM users")
     return cur.fetchall()
 
 # get all unmarked attendance
@@ -38,15 +37,15 @@ def get_users():
 
 def get_schedule():
     cur = conn.cursor()
-    cur.execute("SELECT s.uid, u.username, u.password, u.disco, u.whatsapp, s.time, s.link, s.tries FROM schedule s, users u WHERE (s.uid=u.id and s.tries<3 and s.marked=FALSE) ORDER BY time")
+    cur.execute("SELECT s.username, u.password, u.disco, u.whatsapp, s.time, s.link, s.tries FROM schedule s, users u WHERE (s.username=u.username and s.tries<3 and s.marked=FALSE) ORDER BY time")
     return cur.fetchall()
 
 # add to schedule
 
 
-def schedule(uid, time, link):
-    conn.execute("INSERT OR IGNORE INTO schedule (uid, time, link, marked, tries) VALUES (?, ?, ?, ?, ?)",
-                    (uid, time, link, False, 0))
+def schedule(username, time, link):
+    conn.execute("INSERT OR IGNORE INTO schedule (username, time, link, marked, tries) VALUES (?, ?, ?, ?, ?)",
+                    (username, time, link, False, 0))
     conn.commit()
 
 # clear schedule
@@ -61,7 +60,7 @@ def clear():
 # update attendance status
 
 
-def update(id, link, marked, tries):
+def update(username, link, marked, tries):
     conn.execute(
-        "UPDATE schedule SET marked=(?), tries=(?) WHERE uid=(?) and link=(?)", (marked, tries, id, link))
+        "UPDATE schedule SET marked=(?), tries=(?) WHERE username=(?) and link=(?)", (marked, tries, username, link))
     conn.commit()

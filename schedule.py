@@ -18,7 +18,7 @@ conn.execute('''
             link VARCHAR(6) NOT NULL,
             marked BOOLEAN default FALSE,
             tries INTEGER NOT NULL default 0,
-            UNIQUE(uid, time)
+            UNIQUE(username, time)
         )
 ''')
 

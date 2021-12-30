@@ -15,7 +15,7 @@ webHook = os.getenv('WEBHOOK')
 wa = "http://localhost:3000"
 
 submit = re.compile(r'mod\/attendance\/attendance.php\?sessid=(\d{5})&amp;sesskey=(\w{10})')
-coursere = re.compile(r'<h1>([\w\s]*)[\w\s\&\/\(\)\-\–\.\]\[]*</h1>')
+coursere = re.compile(r'<h1>([\w\s]*)[\w\s\&\:\;\/\(\)\-\–\.\[\]]*</h1>')
 sessions = {}
 users = []
 

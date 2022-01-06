@@ -12,6 +12,7 @@
     "body-parser": "^1.19.1",
     "express": "^4.17.2",
     "http": "^0.0.1-security",
+    "pg": "^8.7.1",
     "qrcode-terminal": "^0.12.0",
     "whatsapp-web.js": "github:pedroslopez/whatsapp-web.js#multidevice"
   }

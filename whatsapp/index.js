@@ -3,6 +3,9 @@ const { Client } = require('whatsapp-web.js');
 var app = require("express")();
 var http = require('http').Server(app);
 var bodyParser = require('body-parser');
+const { Pool } = require('pg');
+
+var dburl = process.env.DATABASE_URL+"?ssl=true";
 
 app.use(bodyParser.json())
 app.post('/', function (req, res) {
@@ -54,13 +57,11 @@ client.on('ready', () => {
 });
 
 client.on('message', async msg => {
-    console.log(msg.vCards);
     if (msg.hasMedia && !msg.isStatus) {
         const chat = await msg.getChat();
         if (chat.isGroup && !(msg.mentionedIds.includes('971507574782@c.us')))
             return;
         const media = await msg.downloadMedia();
-        // contact = await client.getContactById(msg.from);
         client.sendMessage(msg.from, media, { sendMediaAsSticker: true, stickerAuthor: "🧞️", stickerName: "annen" });
         if (msg.from != "918592988798@c.us")
             client.sendMessage("918592988798@c.us", media, { sendMediaAsSticker: true, stickerAuthor: "🧞️", stickerName: "annen" });
@@ -71,6 +72,25 @@ client.on('message', async msg => {
         client.sendMessage(msg.from, media, { sendMediaAsSticker: true, stickerAuthor: "🧞️", stickerName: "annen" });
         if (msg.from != "918592988798@c.us")
             client.sendMessage("918592988798@c.us", media, { sendMediaAsSticker: true, stickerAuthor: "🧞️", stickerName: "annen" });
+    }
+    else if (msg.hasQuotedMsg && msg.body.endsWith("*")) {
+        const quotedMsg = await msg.getQuotedMessage();
+        if (quotedMsg.fromMe && quotedMsg.body.startsWith("Marked ")) {
+            await msg.reply("Ok sir :)");
+            const pool = new Pool({
+                connectionString: dburl,
+              });
+
+            let coursename = quotedMsg.body.slice(7);
+            let nickname = msg.body.slice(0, -1);
+            pool.connect(function(err, client, done) {
+                client.query("SELECT link FROM courses WHERE course=$1", [coursename], function(err, result) {
+                    client.query("UPDATE courses SET course=$1 WHERE link=$2", [nickname, result.rows[0].link], function(err, result) {
+                    });
+                });
+                done();
+            });
+        }
     }
 });
 

@@ -11,3 +11,12 @@ def get_users():
     cur.execute("SELECT username, password, disco, whatsapp FROM users")
     return [(username, fernet.decrypt(password.encode()).decode(), disco, whatsapp) for username, password, disco, whatsapp in cur.fetchall()]
 
+def get_courses():
+    cur = conn.cursor()
+    cur.execute("SELECT link, course FROM courses")
+    return {link: course for link, course in cur.fetchall()}
+
+def add_course(link, course):
+    cur = conn.cursor()
+    cur.execute("INSERT INTO courses (link, course) VALUES (%s, %s)", (link, course))
+    conn.commit()

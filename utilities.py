@@ -29,10 +29,14 @@ async def expired(session):
         return "login" in str(resp.url)
 
 # get logged in session
+headers = {
+    # default headers
+    "User-Agent": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/78.0.3904.108 Safari/537.36"
+}
 async def get_session(username, password):
     cookiejar = os.path.join("cookies", username)
     timeout = aiohttp.ClientTimeout(total=None)
-    session = aiohttp.ClientSession(timeout=timeout)
+    session = aiohttp.ClientSession(headers=headers, timeout=timeout)
 
     # try cookie
     if os.path.exists(cookiejar):

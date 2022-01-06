@@ -8,6 +8,7 @@ import user
 import utilities
 import re
 import os
+import time
 # import pytz
 
 # ist = pytz.timezone('Asia/Kolkata')
@@ -16,6 +17,9 @@ wa = "http://localhost:3000"
 
 submit = re.compile(r'mod\/attendance\/attendance.php\?sessid=(\d{5})&amp;sesskey=(\w{10})')
 coursere = re.compile(r'<h1>([\w\s]*)[\w\s\&\:\;\/\(\)\-\–\.\[\]]*</h1>')
+cidre = re.compile(r'[A-Z]{2}[0-9]{4}')
+chome = re.compile(r'https\://eduserver\.nitc\.ac\.in/course/view\.php\?id=')
+custom = {}
 sessions = {}
 users = []
 
@@ -43,7 +47,7 @@ async def crawl():
         att_blocks = soup.find_all("div", attrs={"data-event-eventtype": "attendance"})
         for block in att_blocks:
             # now = pytz.utc.localize(datetime.utcnow()).astimezone(ist)
-            now = datetime.now()
+            # now = datetime.now()
             # get start time
             timeurl = block.find("a", string="Today")
             time_str = timeurl.parent.contents[1]
@@ -55,6 +59,19 @@ async def crawl():
                 continue
             # get link
             link = block.find("a", string="Go to activity").attrs["href"][-5:]
+            if link not in custom:
+                course = block.find("a", href=chome).contents[0]
+                if course:
+                    clist = course.split()
+                    if cidre.search(clist[0]):
+                        clist.pop(0)
+                    course = ' '.join(clist)
+                    for i in range(len(course)):
+                        if course[i] == '[' or course[i]=='(' or course[i]=='{':
+                            course = course[:i].strip()
+                            break
+                    custom[link] = course
+                    user.add_course(link, course)
             db.schedule(username, time, link)
         # await sess.close()
 
@@ -77,9 +94,7 @@ async def loop(schedules):
 
         # find submit link
         search = submit.search(r)
-        course = coursere.search(r)
-        if course:
-            course = ' '.join(course.group(1).split()[1:])
+        course = custom[link]
         if search:
             submiturl = search.group(0)
             async with session.get("https://eduserver.nitc.ac.in/" + submiturl) as resp:
@@ -187,7 +202,8 @@ async def init():
 
 if __name__=="__main__":
     users = user.get_users()
-    user.conn.close()
+    custom = user.get_courses()
+    # user.conn.close()
     lp = asyncio.get_event_loop()
     lp.run_until_complete(init())
     lp.run_until_complete(crawl())
@@ -214,6 +230,7 @@ if __name__=="__main__":
                     await ses.close()
             lp.run_until_complete(close())
             lp.close()
+            user.conn.close()
             db.clear()
             exit(0)
         # mark if schedule exists

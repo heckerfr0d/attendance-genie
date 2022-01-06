@@ -6,6 +6,9 @@ var bodyParser = require('body-parser');
 const { Pool } = require('pg');
 
 var dburl = process.env.DATABASE_URL+"?ssl=true";
+const pool = new Pool({
+    connectionString: dburl,
+  });
 
 app.use(bodyParser.json())
 app.post('/', function (req, res) {
@@ -77,9 +80,6 @@ client.on('message', async msg => {
         const quotedMsg = await msg.getQuotedMessage();
         if (quotedMsg.fromMe && quotedMsg.body.startsWith("Marked ")) {
             await msg.reply("Ok sir :)");
-            const pool = new Pool({
-                connectionString: dburl,
-              });
 
             let coursename = quotedMsg.body.slice(7);
             let nickname = msg.body.slice(0, -1);

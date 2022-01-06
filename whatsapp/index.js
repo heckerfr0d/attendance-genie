@@ -5,9 +5,10 @@ var http = require('http').Server(app);
 var bodyParser = require('body-parser');
 const { Pool } = require('pg');
 
-var dburl = process.env.DATABASE_URL+"?ssl=true";
+var dburl = process.env.DATABASE_URL;
 const pool = new Pool({
     connectionString: dburl,
+    ssl: { rejectUnauthorized: false }
   });
 
 app.use(bodyParser.json())
@@ -79,7 +80,7 @@ client.on('message', async msg => {
     else if (msg.hasQuotedMsg && msg.body.endsWith("*")) {
         const quotedMsg = await msg.getQuotedMessage();
         if (quotedMsg.fromMe && quotedMsg.body.startsWith("Marked ")) {
-            await msg.reply("Ok sir :)");
+            await msg.reply("Ok sir ;)");
 
             let coursename = quotedMsg.body.slice(7);
             let nickname = msg.body.slice(0, -1);

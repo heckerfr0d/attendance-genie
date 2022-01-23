@@ -47,7 +47,7 @@ async def crawl():
         att_blocks = soup.find_all("div", attrs={"data-event-eventtype": "attendance"})
         for block in att_blocks:
             # now = pytz.utc.localize(datetime.utcnow()).astimezone(ist)
-            # now = datetime.now()
+            now = datetime.now()
             # get start time
             timeurl = block.find("a", string="Today")
             time_str = timeurl.parent.contents[1]
@@ -125,7 +125,9 @@ async def loop(schedules):
                     'https://eduserver.nitc.ac.in/mod/attendance/attendance.php',
                     data=data
                 )
-                db.update(username, link, r.status==200 or r.status==303, tries+1)
+                db.update(username, link, r.status==200 or r.status==303 or r.status==301, tries+1)
+
+                print(r.status, username, course, file=open("genie.log", "a"))
 
                 if r.status == 200 or r.status==303 or tries >=2:
                     res.append((username, disco, whatsapp, course, r.status))
@@ -166,7 +168,7 @@ async def loop(schedules):
     df = {}
     payloads = ["", "", []]
     for username, disco, whatsapp, course, status in res:
-        if status == 200 or status == 303:
+        if status == 200 or status == 303 or status == 301:
             # dd += f"Marked <@{disco if disco else username}>'s {course}\n"
             ds[course] = ds.get(course, [])
             ds[course].append('<@'+disco+'>' if disco else username)
@@ -213,17 +215,6 @@ if __name__=="__main__":
         # now = pytz.utc.localize(datetime.utcnow()).astimezone(ist)
         now = datetime.now()
 
-        # check for link at specified times
-        if (( 7 <= now.hour < 10 and now.minute == 49 and now.second<=5) or
-            ( 7 <= now.hour <  9 and now.minute == 54 and now.second<=5) or
-            ( 7 <= now.hour <  9 and now.minute == 59 and now.second<=5) or
-            (10 <= now.hour <= 11 and now.minute == 4 and now.second<=5) or
-            (10 <= now.hour <= 11 and now.minute == 9 and now.second<=5) or
-            (10 <= now.hour <= 11 and now.minute == 14 and now.second<=5) or
-            (12 <= now.hour <= 16 and now.minute == 54 and now.second<=5) or
-            (12 <= now.hour <= 17 and now.minute == 59 and now.second<=5)):
-            lp.run_until_complete(crawl())
-            schedules = db.get_schedule()
         if now.hour == 18:
             async def close():
                 for ses in sessions.values():
@@ -233,7 +224,26 @@ if __name__=="__main__":
             user.conn.close()
             db.clear()
             exit(0)
-        # mark if schedule exists
-        if schedules and schedules[0][4] <= now:
-            lp.run_until_complete(loop(schedules))
-            schedules = db.get_schedule()
+
+        try:
+
+            # check for link at specified times
+            if (( 7 <= now.hour < 10 and now.minute == 49 and now.second<=5) or
+                ( 7 <= now.hour <  9 and now.minute == 54 and now.second<=5) or
+                ( 7 <= now.hour <  9 and now.minute == 59 and now.second<=5) or
+                (10 <= now.hour <= 11 and now.minute == 4 and now.second<=5) or
+                (10 <= now.hour <= 11 and now.minute == 9 and now.second<=5) or
+                (10 <= now.hour <= 11 and now.minute == 14 and now.second<=5) or
+                (12 <= now.hour <= 16 and now.minute == 54 and now.second<=5) or
+                (12 <= now.hour <= 17 and now.minute == 59 and now.second<=5)):
+                lp.run_until_complete(crawl())
+                schedules = db.get_schedule()
+            
+            # mark if schedule exists
+            if schedules and schedules[0][4] <= now:
+                lp.run_until_complete(loop(schedules))
+                schedules = db.get_schedule()
+
+        except Exception as e:
+            print(e, file=open('genie.log', 'a'))
+            continue

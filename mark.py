@@ -171,42 +171,44 @@ async def loop(schedules):
 
     cors = [mark1(username, disco, whatsapp, link, tries) for username, password, disco, whatsapp, time, link, tries, type in schedules if time <= now and not type]
     await asyncio.gather(*cors)
-    ds = {}
-    df = {}
-    payloads = ["", "", []]
-    for username, disco, whatsapp, course, status in res:
-        if status == 200 or status == 303 or status == 301:
-            # dd += f"Marked <@{disco if disco else username}>'s {course}\n"
-            ds[course] = ds.get(course, [])
-            ds[course].append('<@'+disco+'>' if disco else username)
-            if whatsapp:
-                payloads[2].append([whatsapp, "Marked " + course])
-        else:
-            # dd += f"Failed to mark <@{disco if disco else username}>'s {course}\n"
-            df[course] = df.get(course, [])
-            df[course].append('<@'+disco+'>' if disco else username)
-            if whatsapp:
-                payloads[2].append([whatsapp, "Failed to mark " + course])
-    for course in ds:
-        payloads[0] += f"Marked {course} for {' '.join(ds[course])}\n"
-    for course in df:
-        payloads[1] += f"Failed to mark {course} for {' '.join(df[course])}\n"
-
     async def notify(url, payload):
         await sessions['B190513CS'].post(
             url,
             json={"content": payload}
         )
-    tasks = [notify(url, payload) for url, payload in zip([webHook, webHook, wa], payloads)]
-    await asyncio.gather(*tasks)
+    if res:
+        ds = {}
+        df = {}
+        payloads = ["", "", []]
+        for username, disco, whatsapp, course, status in res:
+            if status == 200 or status == 303 or status == 301:
+                # dd += f"Marked <@{disco if disco else username}>'s {course}\n"
+                ds[course] = ds.get(course, [])
+                ds[course].append('<@'+disco+'>' if disco else username)
+                if whatsapp:
+                    payloads[2].append([whatsapp, "Marked " + course])
+            else:
+                # dd += f"Failed to mark <@{disco if disco else username}>'s {course}\n"
+                df[course] = df.get(course, [])
+                df[course].append('<@'+disco+'>' if disco else username)
+                if whatsapp:
+                    payloads[2].append([whatsapp, "Failed to mark " + course])
+        for course in ds:
+            payloads[0] += f"Marked {course} for {' '.join(ds[course])}\n"
+        for course in df:
+            payloads[1] += f"Failed to mark {course} for {' '.join(df[course])}\n"
+
+        tasks = [notify(url, payload) for url, payload in zip([webHook, webHook, wa], payloads)]
+        await asyncio.gather(*tasks)
 
     async def get_class(username, link):
         session = sessions[username]
         async with session.get(f"https://eduserver.nitc.ac.in/mod/webexactivity/view.php?id={link}&action=joinmeeting") as response:
             db.update(username, link, True, 1)
-            return response.url
-    classt = [[whatsapp, "Join " + custom[link] + ":\n" + await get_class(username, link)] for username, password, disco, whatsapp, time, link, tries, type in schedules if time <= now and type]
-    await notify(wa, classt)
+            return str(response.url)
+    classt = [[whatsapp, "Join " + custom[link] + ":\n" + await get_class(username, link)] for username, password, disco, whatsapp, time, link, tries, type in schedules if time <= now and whatsapp and type]
+    if classt:
+        await notify(wa, classt)
 
     # await session.close()
 
@@ -232,7 +234,7 @@ if __name__=="__main__":
         # now = pytz.utc.localize(datetime.utcnow()).astimezone(ist)
         now = datetime.now()
 
-        if now.hour == 18:
+        if now.hour == 17 and now.minute >= 10:
             async def close():
                 for ses in sessions.values():
                     await ses.close()
@@ -245,14 +247,14 @@ if __name__=="__main__":
         try:
 
             # check for link at specified times
-            if (( 7 <= now.hour < 10 and now.minute == 49 and now.second<=5) or
-                ( 7 <= now.hour <  9 and now.minute == 54 and now.second<=5) or
-                ( 7 <= now.hour <  9 and now.minute == 59 and now.second<=5) or
-                (10 <= now.hour <= 11 and now.minute == 4 and now.second<=5) or
-                (10 <= now.hour <= 11 and now.minute == 9 and now.second<=5) or
-                (10 <= now.hour <= 11 and now.minute == 14 and now.second<=5) or
-                (12 <= now.hour <= 16 and now.minute == 54 and now.second<=5) or
-                (12 <= now.hour <= 17 and now.minute == 59 and now.second<=5)):
+            if (( 7 <= now.hour < 10 and now.minute == 50 and now.second<=10) or
+                ( 7 <= now.hour <  9 and now.minute == 55 and now.second<=10) or
+                ( 8 <= now.hour <= 9 and now.minute == 00 and now.second<=10) or
+                (10 <= now.hour <= 11 and now.minute == 5 and now.second<=10) or
+                (10 <= now.hour <= 11 and now.minute == 10 and now.second<=10) or
+                (10 <= now.hour <= 11 and now.minute == 15 and now.second<=10) or
+                (12 <= now.hour <= 16 and now.minute == 55 and now.second<=10) or
+                ( 1 <= now.hour <= 17 and now.minute == 00 and now.second<=10)):
                 lp.run_until_complete(crawl())
                 schedules = db.get_schedule()
             

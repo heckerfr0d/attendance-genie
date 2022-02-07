@@ -59,12 +59,11 @@ async def crawl():
             if now-time > timedelta(minutes=5):
                 continue
             # get link
+            link = block.find("a", string="Go to activity").attrs["href"].split("id=", 1)[1]
             if block in class_blocks:
-                link = block.find("a", string="Go to activity").attrs["href"][-6:]
-                db.schedule(username, time, link, 1)
+                db.schedule(username, time, link, True)
             else:
-                link = block.find("a", string="Go to activity").attrs["href"][-5:]
-                db.schedule(username, time, link, 0)
+                db.schedule(username, time, link, False)
             if link not in custom:
                 course = block.find("a", href=chome).contents[0]
                 if course:
@@ -247,14 +246,14 @@ if __name__=="__main__":
         try:
 
             # check for link at specified times
-            if (( 7 <= now.hour < 10 and now.minute == 50 and now.second<=10) or
-                ( 7 <= now.hour <  9 and now.minute == 55 and now.second<=10) or
-                ( 8 <= now.hour <= 9 and now.minute == 00 and now.second<=10) or
-                (10 <= now.hour <= 11 and now.minute == 5 and now.second<=10) or
-                (10 <= now.hour <= 11 and now.minute == 10 and now.second<=10) or
-                (10 <= now.hour <= 11 and now.minute == 15 and now.second<=10) or
-                (12 <= now.hour <= 16 and now.minute == 55 and now.second<=10) or
-                ( 1 <= now.hour <= 17 and now.minute == 00 and now.second<=10)):
+            if (( 7 <= now.hour < 10 and now.minute == 49 ) or
+                ( 7 <= now.hour <  9 and now.minute == 54 ) or
+                ( 7 <= now.hour <  9 and now.minute == 59 ) or
+                (10 <= now.hour <= 11 and now.minute == 4 ) or
+                (10 <= now.hour <= 11 and now.minute == 9 ) or
+                (10 <= now.hour <= 11 and now.minute == 14) or
+                (12 <= now.hour <= 16 and now.minute == 54) or
+                (12 <= now.hour <= 16 and now.minute == 59)):
                 lp.run_until_complete(crawl())
                 schedules = db.get_schedule()
             

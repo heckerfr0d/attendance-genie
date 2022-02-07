@@ -11,7 +11,7 @@ Follow [the attendance channel](https://discord.gg/69F4DddEyG) on our discord se
 Your discord ID is the 18 digit number you get when you tag yourself in a discord text channel with a `\` preceding the tag.  
 
 **New** - You can now provide your WhatsApp number to get notified on WhatsApp when your attendance is marked.  
-Also, your passwords are now encrypted before it is stored.  
+**Newer** - Genie now sends you the link to join class (to ease his conscience :p).  
 
 If, for some obscure reason you don't trust us with your eduserver login details (lol), you can always host the whole thing yourself (it's easy dw :P)  
 The Flask frontend is Heroku ready but for the backend you might have to create a postgres database to load user details from. You can also modify the code to do it differently.  
@@ -37,6 +37,6 @@ python3 mark.py
 
 Finding a VPS to host it is something I'll leave to you 😁  
 
-**Smol disclaimer**: Very rarely it can happen that the script runs into some error and fails to mark your attendance... Please be vigilant for at least a week after joining the club and report any bugs/discrepancies found.  
+**Smol disclaimer**: Very rarely it can happen that the script runs into some error and fails to mark your attendance... Please be vigilant for at least a week after joining the cult and report any bugs/discrepancies found.  
 
-For contributions of any kind feel free to talk to us on discord or open an issue or submit a PR or even directly contact me :innocent:
+For contributions/suggestions/complaints of any kind feel free to talk to us on discord or open an issue or submit a PR or even directly contact me :innocent:

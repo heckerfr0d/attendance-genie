@@ -45,7 +45,8 @@ async def crawl():
 
         # find attendance blocks
         att_blocks = soup.find_all("div", attrs={"data-event-eventtype": "attendance"})
-        for block in att_blocks:
+        class_blocks = soup.find_all("div", attrs={"data-event-eventtype": "meetingtime"})
+        for block in att_blocks+class_blocks:
             # now = pytz.utc.localize(datetime.utcnow()).astimezone(ist)
             now = datetime.now()
             # get start time
@@ -72,7 +73,7 @@ async def crawl():
                             break
                     custom[link] = course
                     user.add_course(link, course)
-            db.schedule(username, time, link)
+            db.schedule(username, time, link, block in class_blocks)
         # await sess.close()
 
     # tasks = [oneiter(uid, username, password) for uid, username, password, disco, whatsapp in users]
@@ -146,6 +147,7 @@ async def loop(schedules):
             else:
                 db.update(username, link, False, tries+1)
                 if tries >=2:
+                    print(tries, username, course, file=open("genie.log", "a"))
                     res.append((username, disco, whatsapp, course, 400))
                 # await session.post(
                 #     webHook,
@@ -155,14 +157,15 @@ async def loop(schedules):
         else:
             db.update(username, link, False, tries+1)
             if tries >=2:
-                    res.append((username, disco, whatsapp, course, 404))
+                print(tries, username, course, file=open("genie.log", "a"))
+                res.append((username, disco, whatsapp, course, 404))
             # await session.post(
             #     webHook,
             #     json={"content": f'{tries+1} fail(s) for <@{disco if disco else username}>'}
             # )
         # await session.close()
 
-    cors = [mark1(username, password, disco, whatsapp, link, tries) for username, password, disco, whatsapp, time, link, tries in schedules if time <= now]
+    cors = [mark1(username, password, disco, whatsapp, link, tries) for username, password, disco, whatsapp, time, link, tries, type in schedules if time <= now and not type]
     await asyncio.gather(*cors)
     ds = {}
     df = {}
@@ -173,13 +176,13 @@ async def loop(schedules):
             ds[course] = ds.get(course, [])
             ds[course].append('<@'+disco+'>' if disco else username)
             if whatsapp:
-                payloads[2].append([True, whatsapp, course])
+                payloads[2].append([whatsapp, "Marked " + course])
         else:
             # dd += f"Failed to mark <@{disco if disco else username}>'s {course}\n"
             df[course] = df.get(course, [])
             df[course].append('<@'+disco+'>' if disco else username)
             if whatsapp:
-                payloads[2].append([False, whatsapp, course])
+                payloads[2].append([whatsapp, "Failed to mark " + course])
     for course in ds:
         payloads[0] += f"Marked {course} for {' '.join(ds[course])}\n"
     for course in df:
@@ -192,6 +195,19 @@ async def loop(schedules):
         )
     tasks = [notify(url, payload) for url, payload in zip([webHook, webHook, wa], payloads)]
     await asyncio.gather(*tasks)
+
+    async def send_class(username, password, link):
+        session = sessions[username]
+        async with session.get(f"https://eduserver.nitc.ac.in/mod/webexactivity/view.php?id={link}&action=joinmeeting") as response:
+            db.update(username, link, True, 1)
+            return response.url
+    classt = [whatsapp, "Join " + custom[link] + ":\n" + await send_class(username, password, link) for username, password, disco, whatsapp, time, link, tries, type in schedules if time <= now and type]
+    await sessions["B190513CS"].post(
+        wa,
+        json={"content": classt}
+    )
+
+    # await session.close()
 
 async def init():
     global sessions, users

@@ -16,10 +16,7 @@ app.use(bodyParser.json())
 app.post('/', function (req, res) {
     var list = req.body.content;
     for (var i in list) {
-        if (list[i][0])
-            client.sendMessage(list[i][1] + "@c.us", "Marked " + list[i][2]);
-        else
-            client.sendMessage(list[i][1] + "@c.us", "Failed to mark " + list[i][2]);
+            client.sendMessage(list[i][0] + "@c.us", list[i][1]);
     }
     res.send("Message sent");
 });
@@ -86,16 +83,37 @@ client.on('message', async msg => {
     }
     else if (msg.hasQuotedMsg && msg.body.endsWith("*")) {
         const quotedMsg = await msg.getQuotedMessage();
-        if (quotedMsg.fromMe && quotedMsg.body.startsWith("Marked ")) {
-            await msg.reply("Ok sir ;)");
-
-            let coursename = quotedMsg.body.slice(7);
-            let nickname = msg.body.slice(0, -1);
-            pool.connect(function(err, client, done) {
-                client.query("UPDATE courses SET course=$1 WHERE link=$2", [nickname, coursename], function(err, result) {
+        if (quotedMsg.fromMe){
+            if (quotedMsg.body.startsWith("Marked ")){
+                let coursename = quotedMsg.body.slice(7);
+                let nickname = msg.body.slice(0, -1);
+                pool.connect(function(err, client, done) {
+                    client.query("UPDATE courses SET course=$1 WHERE course=$2", [nickname, coursename], function(err, result) {
+                    });
+                    done();
                 });
-                done();
-            });
+                await msg.reply("Ok sir ;)");
+            }
+            else if (quotedMsg.body.startsWith("Failed to mark ")) {
+                let coursename = quotedMsg.body.slice(15);
+                let nickname = msg.body.slice(0, -1);
+                pool.connect(function(err, client, done) {
+                    client.query("UPDATE courses SET course=$1 WHERE course=$2", [nickname, coursename], function(err, result) {
+                    });
+                    done();
+                });
+                await msg.reply("Ok sir ;)");
+            }
+            else if (quotedMsg.body.startsWith("Join ")) {
+                let coursename = quotedMsg.body.slice(5, quotedMsg.body.indexOf('https')-1);
+                let nickname = msg.body.slice(0, -1);
+                pool.connect(function(err, client, done) {
+                    client.query("UPDATE courses SET course=$1 WHERE course=$2", [nickname, coursename], function(err, result) {
+                    });
+                    done();
+                });
+                await msg.reply("Ok sir ;)");
+            }
         }
     }
 });

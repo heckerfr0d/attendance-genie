@@ -18,6 +18,7 @@ conn.execute('''
             link VARCHAR(6) NOT NULL,
             marked BOOLEAN default FALSE,
             tries INTEGER NOT NULL default 0,
+            type BOOLEAN default 0,
             UNIQUE(username, time)
         )
 ''')
@@ -32,34 +33,30 @@ def get_users():
     cur.execute("SELECT username, password, disco, whatsapp FROM users")
     return cur.fetchall()
 
+
 # get all unmarked attendance
-
-
 def get_schedule():
     cur = conn.cursor()
-    cur.execute("SELECT s.username, u.password, u.disco, u.whatsapp, s.time, s.link, s.tries FROM schedule s, users u WHERE (s.username=u.username and s.tries<3 and s.marked=FALSE) ORDER BY time")
+    cur.execute("SELECT s.username, u.password, u.disco, u.whatsapp, s.time, s.link, s.tries, s.type FROM schedule s, users u WHERE (s.username=u.username and s.tries<3 and s.marked=FALSE) ORDER BY time")
     return cur.fetchall()
 
+
 # add to schedule
-
-
-def schedule(username, time, link):
-    conn.execute("INSERT OR IGNORE INTO schedule (username, time, link, marked, tries) VALUES (?, ?, ?, ?, ?)",
-                    (username, time, link, False, 0))
+def schedule(username, time, link, type):
+    conn.execute("INSERT OR IGNORE INTO schedule (username, time, link, marked, tries, type) VALUES (?, ?, ?, ?, ?, ?)",
+                    (username, time, link, False, 0, type))
     conn.commit()
 
+
 # clear schedule
-
-
 def clear():
     conn.execute("DELETE FROM schedule")
     conn.execute("DELETE FROM users")
     conn.commit()
     conn.close()
 
+
 # update attendance status
-
-
 def update(username, link, marked, tries):
     conn.execute(
         "UPDATE schedule SET marked=(?), tries=(?) WHERE username=(?) and link=(?)", (marked, tries, username, link))

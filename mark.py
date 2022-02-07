@@ -59,7 +59,12 @@ async def crawl():
             if now-time > timedelta(minutes=5):
                 continue
             # get link
-            link = block.find("a", string="Go to activity").attrs["href"][-5:]
+            if block in class_blocks:
+                link = block.find("a", string="Go to activity").attrs["href"][-6:]
+                db.schedule(username, time, link, 1)
+            else:
+                link = block.find("a", string="Go to activity").attrs["href"][-5:]
+                db.schedule(username, time, link, 0)
             if link not in custom:
                 course = block.find("a", href=chome).contents[0]
                 if course:
@@ -73,7 +78,6 @@ async def crawl():
                             break
                     custom[link] = course
                     user.add_course(link, course)
-            db.schedule(username, time, link, block in class_blocks)
         # await sess.close()
 
     # tasks = [oneiter(uid, username, password) for uid, username, password, disco, whatsapp in users]
@@ -85,7 +89,7 @@ async def loop(schedules):
     # now = datetime.now()
     res = []
 
-    async def mark1(username, password, disco, whatsapp, link, tries):
+    async def mark1(username, disco, whatsapp, link, tries):
         # expired = await utilities.expired(sessions[uid])
         # if expired:
         #     sessions[uid] = await utilities.get_session(username, password)
@@ -165,7 +169,7 @@ async def loop(schedules):
             # )
         # await session.close()
 
-    cors = [mark1(username, password, disco, whatsapp, link, tries) for username, password, disco, whatsapp, time, link, tries, type in schedules if time <= now and not type]
+    cors = [mark1(username, disco, whatsapp, link, tries) for username, password, disco, whatsapp, time, link, tries, type in schedules if time <= now and not type]
     await asyncio.gather(*cors)
     ds = {}
     df = {}
@@ -196,16 +200,13 @@ async def loop(schedules):
     tasks = [notify(url, payload) for url, payload in zip([webHook, webHook, wa], payloads)]
     await asyncio.gather(*tasks)
 
-    async def send_class(username, password, link):
+    async def get_class(username, link):
         session = sessions[username]
         async with session.get(f"https://eduserver.nitc.ac.in/mod/webexactivity/view.php?id={link}&action=joinmeeting") as response:
             db.update(username, link, True, 1)
             return response.url
-    classt = [whatsapp, "Join " + custom[link] + ":\n" + await send_class(username, password, link) for username, password, disco, whatsapp, time, link, tries, type in schedules if time <= now and type]
-    await sessions["B190513CS"].post(
-        wa,
-        json={"content": classt}
-    )
+    classt = [[whatsapp, "Join " + custom[link] + ":\n" + await get_class(username, link)] for username, password, disco, whatsapp, time, link, tries, type in schedules if time <= now and type]
+    await notify(wa, classt)
 
     # await session.close()
 

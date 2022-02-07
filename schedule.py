@@ -19,7 +19,7 @@ conn.execute('''
             marked BOOLEAN default FALSE,
             tries INTEGER NOT NULL default 0,
             type BOOLEAN default 0,
-            UNIQUE(username, time)
+            UNIQUE(username, link)
         )
 ''')
 

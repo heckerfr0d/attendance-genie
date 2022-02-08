@@ -131,7 +131,7 @@ async def loop(schedules):
                 )
                 db.update(username, link, r.status==200 or r.status==303 or r.status==301, tries+1)
 
-                print(r.status, username, course, file=open("genie.log", "a"))
+                # print(r.status, username, course, file=open("genie.log", "a"))
 
                 if r.status == 200 or r.status==303 or tries >=2:
                     res.append((username, disco, whatsapp, course, r.status))
@@ -150,7 +150,7 @@ async def loop(schedules):
             else:
                 db.update(username, link, False, tries+1)
                 if tries >=2:
-                    print(tries, username, course, file=open("genie.log", "a"))
+                    # print(tries, username, course, file=open("genie.log", "a"))
                     res.append((username, disco, whatsapp, course, 400))
                 # await session.post(
                 #     webHook,
@@ -160,7 +160,7 @@ async def loop(schedules):
         else:
             db.update(username, link, False, tries+1)
             if tries >=2:
-                print(tries, username, course, file=open("genie.log", "a"))
+                # print(tries, username, course, file=open("genie.log", "a"))
                 res.append((username, disco, whatsapp, course, 404))
             # await session.post(
             #     webHook,
@@ -169,12 +169,27 @@ async def loop(schedules):
         # await session.close()
 
     cors = [mark1(username, disco, whatsapp, link, tries) for username, password, disco, whatsapp, time, link, tries, type in schedules if time <= now and not type]
-    await asyncio.gather(*cors)
+    if cors:
+        await asyncio.gather(*cors)
     async def notify(url, payload):
         await sessions['B190513CS'].post(
             url,
             json={"content": payload}
         )
+
+    class_links = []
+    async def get_class(username, whatsapp, link):
+        session = sessions[username]
+        async with session.get(f"https://eduserver.nitc.ac.in/mod/webexactivity/view.php?id={link}&action=joinmeeting") as response:
+            async with session.get(response.url) as resp:
+                class_links.append([whatsapp, "Join " + custom[link] + ":\n" + resp.url])
+                db.update(username, link, True, 1)
+    classt = [get_class(username, whatsapp, link) for username, password, disco, whatsapp, time, link, tries, type in schedules if time <= now and whatsapp and type]
+    if classt:
+        await asyncio.gather(*classt)
+    if class_links:
+        await notify(wa, class_links)
+
     if res:
         ds = {}
         df = {}
@@ -199,16 +214,6 @@ async def loop(schedules):
 
         tasks = [notify(url, payload) for url, payload in zip([webHook, webHook, wa], payloads)]
         await asyncio.gather(*tasks)
-
-    async def get_class(username, link):
-        session = sessions[username]
-        async with session.get(f"https://eduserver.nitc.ac.in/mod/webexactivity/view.php?id={link}&action=joinmeeting") as response:
-            async with session.get(response.url) as resp:
-                db.update(username, link, True, 1)
-                return str(resp.url)
-    classt = [[whatsapp, "Join " + custom[link] + ":\n" + await get_class(username, link)] for username, password, disco, whatsapp, time, link, tries, type in schedules if time <= now and whatsapp and type]
-    if classt:
-        await notify(wa, classt)
 
     # await session.close()
 
@@ -257,7 +262,7 @@ if __name__=="__main__":
                 (12 <= now.hour <= 16 and now.minute == 59)):
                 lp.run_until_complete(crawl())
                 schedules = db.get_schedule()
-            
+
             # mark if schedule exists
             if schedules and schedules[0][4] <= now:
                 lp.run_until_complete(loop(schedules))

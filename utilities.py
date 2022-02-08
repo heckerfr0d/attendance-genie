@@ -2,10 +2,12 @@ import re
 import aiohttp
 import os
 
+home = os.getenv('MOODLE_HOME')
+
 findt = re.compile(r'<input type="hidden" name="logintoken" value="(\w{32})">')
 
 async def login(session, username, password):
-    async with session.get("https://eduserver.nitc.ac.in/login/index.php") as resp:
+    async with session.get(home+"login/index.php") as resp:
         r = await resp.text()
 
     # find login token
@@ -18,14 +20,14 @@ async def login(session, username, password):
 
     # login
     r = await session.post(
-        "https://eduserver.nitc.ac.in/login/index.php",
+        home+"login/index.php",
         data=login
     )
     return session
 
 # check if u get redirected to login lol
 async def expired(session):
-    async with session.get("https://eduserver.nitc.ac.in") as resp:
+    async with session.get(home) as resp:
         return "login" in str(resp.url)
 
 # get logged in session

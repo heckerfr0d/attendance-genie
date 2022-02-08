@@ -13,12 +13,13 @@ import time
 
 # ist = pytz.timezone('Asia/Kolkata')
 webHook = os.getenv('WEBHOOK')
-wa = "http://localhost:3000"
+wa = os.getenv('WHATSAPP')
+home = os.getenv('MOODLE_HOME')
 
 submit = re.compile(r'mod\/attendance\/attendance.php\?sessid=(\d{5})&amp;sesskey=(\w{10})')
 coursere = re.compile(r'<h1>([\w\s]*)[\w\s\&\:\;\/\(\)\-\–\.\[\]]*</h1>')
 cidre = re.compile(r'[A-Z]{2}[0-9]{4}')
-chome = re.compile(r'https\://eduserver\.nitc\.ac\.in/course/view\.php\?id=')
+chome = re.compile(r'/course/view\.php\?id=')
 custom = {}
 sessions = {}
 users = []
@@ -39,7 +40,7 @@ async def crawl():
         sess = sessions[username]
 
         # get calendar page
-        async with sess.get("https://eduserver.nitc.ac.in/calendar/view.php?view=day") as resp:
+        async with sess.get(home+"calendar/view.php?view=day") as resp:
             upcoming = await resp.text()
         soup = BeautifulSoup(upcoming, 'html.parser')
 
@@ -93,7 +94,7 @@ async def loop(schedules):
         # if expired:
         #     sessions[uid] = await utilities.get_session(username, password)
         session = sessions[username]
-        async with session.get("https://eduserver.nitc.ac.in/mod/attendance/view.php?id="+link) as response:
+        async with session.get(home+"mod/attendance/view.php?id="+link) as response:
             r = await response.text()
 
         # find submit link
@@ -101,7 +102,7 @@ async def loop(schedules):
         course = custom[link]
         if search:
             submiturl = search.group(0)
-            async with session.get("https://eduserver.nitc.ac.in/" + submiturl) as resp:
+            async with session.get(home + submiturl) as resp:
                 r = await resp.text()
 
             # find Present/Excused
@@ -126,7 +127,7 @@ async def loop(schedules):
 
                 # submit
                 r = await session.post(
-                    'https://eduserver.nitc.ac.in/mod/attendance/attendance.php',
+                    home+'mod/attendance/attendance.php',
                     data=data
                 )
                 db.update(username, link, r.status==200 or r.status==303 or r.status==301, tries+1)
@@ -180,7 +181,7 @@ async def loop(schedules):
     class_links = []
     async def get_class(username, whatsapp, link):
         session = sessions[username]
-        async with session.get(f"https://eduserver.nitc.ac.in/mod/webexactivity/view.php?id={link}&action=joinmeeting") as response:
+        async with session.get(f"{home}mod/webexactivity/view.php?id={link}&action=joinmeeting") as response:
             async with session.get(response.url) as resp:
                 class_links.append([whatsapp, "Join " + custom[link] + ":\n" + str(resp.url)])
                 db.update(username, link, True, 1)

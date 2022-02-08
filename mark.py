@@ -182,7 +182,7 @@ async def loop(schedules):
         session = sessions[username]
         async with session.get(f"https://eduserver.nitc.ac.in/mod/webexactivity/view.php?id={link}&action=joinmeeting") as response:
             async with session.get(response.url) as resp:
-                class_links.append([whatsapp, "Join " + custom[link] + ":\n" + resp.url])
+                class_links.append([whatsapp, "Join " + custom[link] + ":\n" + str(resp.url)])
                 db.update(username, link, True, 1)
     classt = [get_class(username, whatsapp, link) for username, password, disco, whatsapp, time, link, tries, type in schedules if time <= now and whatsapp and type]
     if classt:

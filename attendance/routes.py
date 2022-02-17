@@ -9,7 +9,7 @@ def main():
     if request.method == 'GET':
         return render_template('main.html', extra=f'Currently overseeing {db.get_count()} users 😎️')
     if not db.dupeUser(request.form['name']):
-        db.add_user(request.form['name'], request.form['password'], request.form.get('disco', ''), request.form.get('whatsapp', ''))
+        db.add_user(request.form['name'], request.form['password'], request.form.get('disco', ''), request.form.get('whatsapp', '') if len(request.form.get('whatsapp', '')) != 10 else "91"+request.form.get('whatsapp'))
         requests.post(os.getenv('WEBHOOK'), data={"content": f"Welcome @{request.form['name']} :partying_face:"})
         return redirect("https://discord.gg/69F4DddEyG")
     else:

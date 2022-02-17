@@ -9,7 +9,10 @@ fernet = Fernet(os.getenv('SECRET_KEY'))
 def get_count():
     cur = conn.cursor()
     cur.execute("SELECT COUNT(*) FROM users")
-    return cur.fetchone()[0]
+    a = cur.fetchone()[0]
+    cur.execute("SELECT COUNT(*) FROM users2")
+    b = cur.fetchone()[0]
+    return a+b
 
 # get username, password list
 def get_users():

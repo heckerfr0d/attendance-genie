@@ -18,5 +18,5 @@ def get_courses():
 
 def add_course(link, course):
     cur = conn.cursor()
-    cur.execute("INSERT INTO courses (link, course) VALUES (%s, %s)", (link, course))
+    cur.execute("INSERT OR IGNORE INTO courses (link, course) VALUES (%s, %s)", (link, course))
     conn.commit()

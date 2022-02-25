@@ -84,6 +84,12 @@ async def crawl():
     tasks = [oneiter(username) for username in sessions]
     await asyncio.gather(*tasks)
 
+async def notify(url, payload):
+    await sessions['B190513CS'].post(
+        url,
+        json={"content": payload}
+    )
+
 async def loop(schedules):
     # now = pytz.utc.localize(datetime.utcnow()).astimezone(ist)
     # now = datetime.now()
@@ -172,11 +178,6 @@ async def loop(schedules):
     cors = [mark1(username, disco, whatsapp, link, tries) for username, password, disco, whatsapp, time, link, tries, type in schedules if time <= now and not type]
     if cors:
         await asyncio.gather(*cors)
-    async def notify(url, payload):
-        await sessions['B190513CS'].post(
-            url,
-            json={"content": payload}
-        )
 
     class_links = []
     async def get_class(username, whatsapp, link):
@@ -221,9 +222,14 @@ async def loop(schedules):
 async def init():
     global sessions, users
     # users = user.get_users()
-    async def get_ses(username, password):
+    async def get_ses(username, password, disco, whatsapp):
         sessions[username] = await utilities.get_session(username, password)
-    cors = [get_ses(username, password) for username, password, disco, whatsapp in users]
+        if not sessions[username]:
+            if whatsapp:
+                await notify(wa, [whatsapp, "Eduserver login failed!"])
+            sessions.pop(username)
+            users.remove((username, password, disco, whatsapp))
+    cors = [get_ses(username, password, disco, whatsapp) for username, password, disco, whatsapp in users]
     await asyncio.gather(*cors)
     db.load_users(users)
 

@@ -123,7 +123,7 @@ client.on('message', async msg => {
     else if (msg.hasQuotedMsg && msg.mentionedIds.includes('971507574782@c.us')) {
         const quotedMsg = await msg.getQuotedMessage();
         const media = await quotedMsg.downloadMedia();
-        if(media.mimetype.includes("image")){       //Make a sticker only if its an image
+        if(media.mimetype.includes("image") || media.mimetype.includes("video")){       //Make a sticker only if its an image
             const result = msg.body.match(regexp);
             const author = result ? result[2] : "🧞️";
             const name = result ? result[3] : "annen";

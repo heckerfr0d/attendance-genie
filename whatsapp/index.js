@@ -113,10 +113,9 @@ client.on('message', async msg => {
             let audioFormats = ytdl.filterFormats(info.formats, 'audioonly');
             let flag = false
             let tag;
-            for(obj in audioFormats){
-                if(parseInt(obj.contentLength) <= 98000000){
-                    console.log(obj.itag)
-                    tag = obj.itag;
+            for(i in audioFormats){
+                if(parseInt(audioFormats[i].contentLength) <= 98000000){
+                    tag = audioFormats[i].itag;
                     flag = true
                     break;
                 }
@@ -308,10 +307,10 @@ client.on('message', async msg => {
             let audioFormats = ytdl.filterFormats(info.formats, 'audioonly');
             let flag = false
             let tag;
-            for(obj in audioFormats){
-                if(parseInt(obj.contentLength) <= 98000000){
-                    console.log(obj.itag)
-                    tag = obj.itag;
+            for(i in audioFormats){
+                if(parseInt(audioFormats[i].contentLength) <= 98000000){
+                    console.log(audioFormats[i].itag)
+                    tag = audioFormats[i].itag;
                     flag = true
                     break;
                 }

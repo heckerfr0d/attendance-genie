@@ -1,6 +1,0 @@
-{
-  "dependencies": {
-    "fluent-ffmpeg": "^2.1.2",
-    "spdl-core": "^2.0.2"
-  }
-}

@@ -17,13 +17,19 @@ def get_count():
 # get username, password list
 def get_users():
     cur = conn.cursor()
+    cur.execute("SELECT id, username, password FROM users2")
+    users = [(id, username, fernet.decrypt(password.encode()).decode()) for id, username, password in cur.fetchall()]
     cur.execute("SELECT id, username, password FROM users")
-    return [(id, username, fernet.decrypt(password.encode()).decode()) for id, username, password in cur.fetchall()]
+    users += [(id, username, fernet.decrypt(password.encode()).decode()) for id, username, password in cur.fetchall()]    
 
 def dupeUser(username):
     cur = conn.cursor()
-    cur.execute("SELECT username FROM users WHERE username=%s", (username,))
-    return cur.fetchone()
+    cur.execute("SELECT username FROM users2 WHERE username=%s", (username,))
+    u = cur.fetchone()
+    if not u:
+        cur.execute("SELECT username FROM users WHERE username=%s", (username,))
+        return cur.fetchone()
+    return u
 
 def update_user(username, password, disco=None, whatsapp=None):
     cur = conn.cursor()

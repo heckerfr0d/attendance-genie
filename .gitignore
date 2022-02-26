@@ -1,0 +1,29 @@
+/whatsapp/node_modules
+package-lock.json
+/whatsapp/package-lock.json
+
+# production
+/build
+
+# misc
+.DS_Store
+*.pem
+
+# debug
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# local env files
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+
+session.json
+
+/WWebJS
+/whatsapp/WWebJS/
+/node_modules
+/whatsapp/tempCodeRunnerFile.js
+tempCodeRunnerFile.js

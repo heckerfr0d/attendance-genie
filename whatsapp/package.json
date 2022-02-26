@@ -14,6 +14,7 @@
     "http": "^0.0.1-security",
     "pg": "^8.7.1",
     "qrcode-terminal": "^0.12.0",
-    "whatsapp-web.js": "github:pedroslopez/whatsapp-web.js#multidevice"
+    "whatsapp-web.js": "github:pedroslopez/whatsapp-web.js#multidevice",
+    "ytdl-core": "^4.10.1"
   }
 }

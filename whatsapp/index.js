@@ -109,16 +109,34 @@ client.on('message', async msg => {
         }
         // msg.reply("Started downloading the song. Check after some time ;)")
         let id = ytdl.getURLVideoID(msg.body)
-        let stream = ytdl(id, {
-            quality: 'highestaudio',
-          });
-
-        if(stream){
-            sndmedia(stream)
-        }
-        else{
-            msg.reply("Sorry master. I am busy doing dishes :( Please try again after some time.")
-        }
+        let info = await ytdl.getInfo(id);
+            let audioFormats = ytdl.filterFormats(info.formats, 'audioonly');
+            let flag = false
+            let tag;
+            for(obj in audioFormats){
+                if(parseInt(obj.contentLength) <= 98000000){
+                    console.log(obj.itag)
+                    tag = obj.itag;
+                    flag = true
+                    break;
+                }
+            }
+            if(!flag){
+                msg.reply("File toooo large :(")
+            }
+            else{
+                let stream = ytdl(id, {
+                    quality: tag,
+                  });
+        
+                if(stream){
+                    sndmedia(stream)
+                }
+                else{
+                    msg.reply("Sorry master. I am busy doing dishes :( Please try again after some time.")
+                }
+            }
+            
     }
     else if (msg.hasMedia && msg.hasQuotedMsg && msg.mentionedIds.includes('971507574782@c.us')) {
         const quotedMsg = await msg.getQuotedMessage();
@@ -286,16 +304,34 @@ client.on('message', async msg => {
             }
             // msg.reply("Started downloading the song. Check after some time ;)")
             let id = ytdl.getURLVideoID(qmsg.body)
-            let stream = ytdl(id, {
-                quality: 'highestaudio',
-              });
-    
-            if(stream){
-                sndmedia(stream)
+            let info = await ytdl.getInfo(id);
+            let audioFormats = ytdl.filterFormats(info.formats, 'audioonly');
+            let flag = false
+            let tag;
+            for(obj in audioFormats){
+                if(parseInt(obj.contentLength) <= 98000000){
+                    console.log(obj.itag)
+                    tag = obj.itag;
+                    flag = true
+                    break;
+                }
+            }
+            if(!flag){
+                msg.reply("File toooo large :(")
             }
             else{
-                msg.reply("Sorry master. I am busy doing dishes :( Please try again after some time.")
+                let stream = ytdl(id, {
+                    quality: tag,
+                  });
+        
+                if(stream){
+                    sndmedia(stream)
+                }
+                else{
+                    msg.reply("Sorry master. I am busy doing dishes :( Please try again after some time.")
+                }
             }
+            
         }
         else{
             msg.reply("Idk what to do with this info :')")

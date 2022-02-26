@@ -107,7 +107,7 @@ client.on('message', async msg => {
                 })
               
         }
-        msg.reply("Started downloading the song. Check after some time ;)")
+        // msg.reply("Started downloading the song. Check after some time ;)")
         let id = ytdl.getURLVideoID(msg.body)
         let stream = ytdl(id, {
             quality: 'highestaudio',
@@ -223,11 +223,12 @@ client.on('message', async msg => {
         }
     }
     else if(!chat.isGroup && spdl.validateURL(msg.body)){
-        await msg.reply("Downloading the file.. Check after some time ;)")
+        // await msg.reply("Downloading the file.. Check after some time ;)")
         await spdl.getInfo(msg.body).then(infos => {
             spdl(infos.url).then(stream => {
                 let filename = infos.title.replace(/[^\w\s]|_/g, "").replace(/\s+/g, " ");
-                stream.on('end', () => {msg.reply("Sending..");
+                stream.on('end', () => {
+                    // msg.reply("Sending..");
                 client.sendMessage(msg.from,MessageMedia.fromFilePath(`./${filename}.mp3`),{sendMediaAsDocument: true})
                 .then(() => fs.unlink(`./${filename}.mp3`, (err) => {
                     if (err) {
@@ -244,11 +245,12 @@ client.on('message', async msg => {
     else if(chat.isGroup && msg.hasQuotedMsg && msg.mentionedIds.includes('971507574782@c.us')) {
         let qmsg = await msg.getQuotedMessage()
         if(spdl.validateURL(qmsg.body)){
-            await msg.reply("Downloading the file.. Check after some time ;)")
+            // await msg.reply("Downloading the file.. Check after some time ;)")
             await spdl.getInfo(qmsg.body).then(infos => {
                 spdl(infos.url).then(stream => {
                     let filename = infos.title.replace(/[^\w\s]|_/g, "").replace(/\s+/g, " ");
-                    stream.on('end', () => {msg.reply("Sending..");
+                    stream.on('end', () => {
+                        // msg.reply("Sending..");
                     client.sendMessage(msg.from,MessageMedia.fromFilePath(`./${filename}.mp3`),{sendMediaAsDocument: true})
                     .then(() => fs.unlink(`./${filename}.mp3`, (err) => {
                         if (err) {
@@ -282,7 +284,7 @@ client.on('message', async msg => {
                     })
                   
             }
-            msg.reply("Started downloading the song. Check after some time ;)")
+            // msg.reply("Started downloading the song. Check after some time ;)")
             let id = ytdl.getURLVideoID(qmsg.body)
             let stream = ytdl(id, {
                 quality: 'highestaudio',

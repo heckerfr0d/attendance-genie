@@ -74,7 +74,7 @@ client.on('message', async msg => {
         if (chat.isGroup && !(msg.mentionedIds.includes('971507574782@c.us')))
             return;
         const media = await msg.downloadMedia();
-        if(media.mimetype.includes("image") || media.mimetype.includes("video")){   //Make a sticker only if its an image/vid
+        if(media.mimetype && (media.mimetype.includes("image") || media.mimetype.includes("video"))){   //Make a sticker only if its an image/vid
             
         const result = msg.body.match(regexp);
         const author = result ? result[3] ? result[2] : result[1] : "🧞️";
@@ -86,7 +86,7 @@ client.on('message', async msg => {
 
         }
     }
-    else if(ytdl.validateURL(msg.body)){
+    else if(!chat.isGroup && ytdl.validateURL(msg.body)){
         const sndmedia = (stream) =>{
             let id = ytdl.getURLVideoID(msg.body)
             let info = ytdl.getInfo(msg.body).then((v)=>{
@@ -107,7 +107,7 @@ client.on('message', async msg => {
                 })
               
         }
-        msg.reply("Started downloading the song. Check after some time ;)")
+        // msg.reply("Started downloading the song. Check after some time ;)")
         let id = ytdl.getURLVideoID(msg.body)
         let stream = ytdl(id, {
             quality: 'highestaudio',
@@ -120,10 +120,10 @@ client.on('message', async msg => {
             msg.reply("Sorry master. I am busy doing dishes :( Please try again after some time.")
         }
     }
-    else if (msg.hasQuotedMsg && msg.mentionedIds.includes('971507574782@c.us')) {
+    else if (msg.hasMedia && msg.hasQuotedMsg && msg.mentionedIds.includes('971507574782@c.us')) {
         const quotedMsg = await msg.getQuotedMessage();
         const media = await quotedMsg.downloadMedia();
-        if(media.mimetype.includes("image") || media.mimetype.includes("video")){       //Make a sticker only if its an image
+        if(media.mimetype && (media.mimetype.includes("image") || media.mimetype.includes("video"))){       //Make a sticker only if its an image
             const result = msg.body.match(regexp);
             const author = result ? result[2] : "🧞️";
             const name = result ? result[3] : "annen";
@@ -222,12 +222,13 @@ client.on('message', async msg => {
             
         }
     }
-    else if(spdl.validateURL(msg.body)){
-        await msg.reply("Downloading the file.. Check after some time ;)")
+    else if(!chat.isGroup && spdl.validateURL(msg.body)){
+        // await msg.reply("Downloading the file.. Check after some time ;)")
         await spdl.getInfo(msg.body).then(infos => {
             spdl(infos.url).then(stream => {
                 let filename = infos.title.replace(/[^\w\s]|_/g, "").replace(/\s+/g, " ");
-                stream.on('end', () => {msg.reply("Sending..");
+                stream.on('end', () => {
+                    // msg.reply("Sending..");
                 client.sendMessage(msg.from,MessageMedia.fromFilePath(`./${filename}.mp3`),{sendMediaAsDocument: true})
                 .then(() => fs.unlink(`./${filename}.mp3`, (err) => {
                     if (err) {
@@ -240,13 +241,71 @@ client.on('message', async msg => {
             });
         });
     }
+    // If the chat is a group, send
+    else if(chat.isGroup && msg.hasQuotedMsg && msg.mentionedIds.includes('971507574782@c.us')) {
+        let qmsg = await msg.getQuotedMessage()
+        if(spdl.validateURL(qmsg.body)){
+            // await msg.reply("Downloading the file.. Check after some time ;)")
+            await spdl.getInfo(qmsg.body).then(infos => {
+                spdl(infos.url).then(stream => {
+                    let filename = infos.title.replace(/[^\w\s]|_/g, "").replace(/\s+/g, " ");
+                    stream.on('end', () => {
+                        // msg.reply("Sending..");
+                    client.sendMessage(msg.from,MessageMedia.fromFilePath(`./${filename}.mp3`),{sendMediaAsDocument: true})
+                    .then(() => fs.unlink(`./${filename}.mp3`, (err) => {
+                        if (err) {
+                        console.error(err)
+                        return
+                        }}) );
+                    
+                });
+                    stream.pipe(fs.createWriteStream(`${filename}.mp3`));
+                });
+            });
+        }
+        else if(ytdl.validateURL(qmsg.body)){
+            const sndmedia = (stream) =>{
+                let id = ytdl.getURLVideoID(qmsg.body)
+                let info = ytdl.getInfo(qmsg.body).then((v)=>{
+                    let fname = v.videoDetails.title.replace(/[^\w\s]|_/g, "").replace(/\s+/g, " ");
+                            ffmpeg(stream)
+                        .audioBitrate(128)
+                        .save(`./${fname}.mp3`)
+                        .on('end', () => {
+                            console.log(`\ndone`);
+                            let media = MessageMedia.fromFilePath(`./${fname}.mp3`)
+                            client.sendMessage(msg.from,media,{sendMediaAsDocument: true})   //CHANGE NUMBER HERE
+                            fs.unlink(`./${fname}.mp3`, (err) => {
+                                if (err) {
+                                console.error(err)
+                                return
+                                }})
+                        }); 
+                    })
+                  
+            }
+            // msg.reply("Started downloading the song. Check after some time ;)")
+            let id = ytdl.getURLVideoID(qmsg.body)
+            let stream = ytdl(id, {
+                quality: 'highestaudio',
+              });
+    
+            if(stream){
+                sndmedia(stream)
+            }
+            else{
+                msg.reply("Sorry master. I am busy doing dishes :( Please try again after some time.")
+            }
+        }
+        else{
+            msg.reply("Idk what to do with this info :')")
+        }
+    }
+
     else if(msg.body.startsWith("-daddy")){
         await msg.reply("Calling daddy..")
         await client.sendMessage("918592988798@c.us",msg.body.slice(7,))
         await msg.reply("Daddy has noted.")
-    }
-    else{
-        await msg.reply("Know what you can wish for, by sending *-help*")
     }
 });
 

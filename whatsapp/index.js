@@ -74,7 +74,7 @@ client.on('message', async msg => {
         if (chat.isGroup && !(msg.mentionedIds.includes('971507574782@c.us')))
             return;
         const media = await msg.downloadMedia();
-        if(media.mimetype.includes("image")){   //Make a sticker only if its an image
+        if(media.mimetype.includes("image") || media.mimetype.includes("video")){   //Make a sticker only if its an image/vid
             
         const result = msg.body.match(regexp);
         const author = result ? result[3] ? result[2] : result[1] : "🧞️";

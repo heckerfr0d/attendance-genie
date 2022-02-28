@@ -9,12 +9,14 @@ import utilities
 import re
 import os
 import time
+import aiohttp
 # import pytz
 
 # ist = pytz.timezone('Asia/Kolkata')
 webHook = os.getenv('WEBHOOK')
 wa = os.getenv('WHATSAPP')
 home = os.getenv('MOODLE_HOME')
+notif = aiohttp.ClientSession()
 
 submit = re.compile(r'mod\/attendance\/attendance.php\?sessid=(\d{5})&amp;sesskey=(\w{10})')
 coursere = re.compile(r'<h1>([\w\s]*)[\w\s\&\:\;\/\(\)\-\–\.\[\]]*</h1>')
@@ -85,7 +87,7 @@ async def crawl():
     await asyncio.gather(*tasks)
 
 async def notify(url, payload):
-    await sessions['B190513CS'].post(
+    await notif.post(
         url,
         json={"content": payload}
     )

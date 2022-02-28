@@ -49,4 +49,12 @@ async def get_session(username, password):
         session = await login(session, username, password)
         session.cookie_jar.save(cookiejar)
 
+    # login failed
+    if (await expired(session)):
+        session = await login(session, username, password)
+        session.cookie_jar.save(cookiejar)
+        if (await expired(session)):
+            await session.close()
+            return None
+
     return session

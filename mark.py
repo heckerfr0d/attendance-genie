@@ -226,18 +226,16 @@ async def init():
     # users = user.get_users()
     async def get_ses(username, password, disco, whatsapp):
         sessions[username] = await utilities.get_session(username, password)
-        if await utilities.expired(sessions[username]):
-            sessions[username] = await utilities.get_session(username, password)
-            if await utilities.expired(sessions[username]):
-                print(f"{username} - {whatsapp} invalid", file=open("genie.log", "a"))
-                if whatsapp:
-                    await notify(wa, [[whatsapp, "Eduserver login failed!"]])
-                await sessions[username].close()
-                sessions.pop(username)
-                users.remove((username, password, disco, whatsapp))
+        if not sessions[username]:
+            if whatsapp:
+                await notify(wa, [[whatsapp, "Eduserver login failed!"]])
+            await sessions[username].close()
+            sessions.pop(username)
+            users.remove((username, password, disco, whatsapp))
     cors = [get_ses(username, password, disco, whatsapp) for username, password, disco, whatsapp in users]
     await asyncio.gather(*cors)
     db.load_users(users)
+    await notify(wa, [["918592988798", f"{len(sessions)} mouths to feed"]])
 
 if __name__=="__main__":
     users = user.get_users()

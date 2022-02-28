@@ -7,12 +7,8 @@ const { Pool } = require('pg');
 const regexp = /(@\d{12} )?(.*):(.*)/;
 const fs = require('fs');
 const ytdl = require('ytdl-core');
-const { endianness } = require('os');
 const ffmpeg = require('fluent-ffmpeg');
 const { GroupChat } = require('whatsapp-web.js/src/structures');
-const { title } = require('process');
-const spdl = require('spdl-core').default;
-
 
 
 var dburl = process.env.DATABASE_URL;

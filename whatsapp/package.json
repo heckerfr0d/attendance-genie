@@ -11,12 +11,11 @@
   "dependencies": {
     "body-parser": "^1.19.1",
     "express": "^4.17.2",
+    "fluent-ffmpeg": "^2.1.2",
     "http": "^0.0.1-security",
     "pg": "^8.7.1",
     "qrcode-terminal": "^0.12.0",
     "whatsapp-web.js": "github:pedroslopez/whatsapp-web.js#multidevice",
-    "ytdl-core": "^4.10.1",
-    "fluent-ffmpeg": "^2.1.2",
-    "spdl-core": "^2.0.2"
+    "ytdl-core": "^4.10.1"
   }
 }

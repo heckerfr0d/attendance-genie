@@ -226,9 +226,11 @@ async def init():
     # users = user.get_users()
     async def get_ses(username, password, disco, whatsapp):
         sessions[username] = await utilities.get_session(username, password)
-        if not sessions[username]:
+        if await utilities.expired(sessions[username]):
+            print(f"{username} - {whatsapp} invalid")
             if whatsapp:
                 await notify(wa, [whatsapp, "Eduserver login failed!"])
+            await sessions[username].close()
             sessions.pop(username)
             users.remove((username, password, disco, whatsapp))
     cors = [get_ses(username, password, disco, whatsapp) for username, password, disco, whatsapp in users]
@@ -250,6 +252,7 @@ if __name__=="__main__":
 
         if now.hour == 17 and now.minute >= 10:
             async def close():
+                await notif.close()
                 for ses in sessions.values():
                     await ses.close()
             lp.run_until_complete(close())

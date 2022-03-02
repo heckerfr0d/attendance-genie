@@ -40,7 +40,7 @@ http.listen(3000, function () {
 
 // Use the saved values
 const client = new Client({
-    puppeteer: { headless: false }
+    // puppeteer: { headless: false }
     // clientId: 'remote'
 });
 

@@ -88,7 +88,7 @@ client.on('message', async msg => {
         let id = ytdl.getURLVideoID(msg.body)
         let info = await ytdl.getInfo(id, {quality: 'highestaudio'});
             let audioFormats = ytdl.filterFormats(info.formats, 'audioonly');
-            let flag = false
+            let flag = true
             let tag;
             // for(i in audioFormats){
             //     if(parseInt(audioFormats[i].contentLength) <= 98000000){
@@ -214,7 +214,7 @@ client.on('message', async msg => {
         let id = ytdl.getURLVideoID(target)
         let info = await ytdl.getInfo(id, {quality: 'highestaudio'});
         let audioFormats = ytdl.filterFormats(info.formats, 'audioonly');
-        let flag = false
+        let flag = true
         let tag;
         // for(i in audioFormats){
         //     if(parseInt(audioFormats[i].contentLength) <= 98000000){
@@ -268,7 +268,7 @@ client.on('message', async msg => {
             let id = ytdl.getURLVideoID(qmsg.body)
             let info = await ytdl.getInfo(id, {quality: 'highestaudio'});
             let audioFormats = ytdl.filterFormats(info.formats, 'audioonly');
-            let flag = false
+            let flag = true
             let tag;
             // for(i in audioFormats){
             //     if(parseInt(audioFormats[i].contentLength) <= 98000000){

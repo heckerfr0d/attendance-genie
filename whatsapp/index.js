@@ -69,12 +69,12 @@ client.on('message', async msg => {
             let info = ytdl.getInfo(msg.body, {quality: 'highestaudio'}).then((v)=>{
                 let fname = v.videoDetails.title.replace(/[^\w\s]|_/g, "").replace(/\s+/g, " ");
                         ffmpeg(stream)
-                    .audioBitrate(info.formats[0].audioBitrate)
+                    .audioBitrate(v.formats[0].audioBitrate)
                     .save(`./${fname}.mp3`)
                     .on('end', () => {
                         console.log(`\ndone`);
                         let media = MessageMedia.fromFilePath(`./${fname}.mp3`)
-                        msg.reply(media,{sendMediaAsDocument: true})   //CHANGE NUMBER HERE
+                        msg.reply(media,msg.from,{sendMediaAsDocument: true})   //CHANGE NUMBER HERE
                         fs.unlink(`./${fname}.mp3`, (err) => {
                             if (err) {
                             console.error(err)
@@ -192,15 +192,15 @@ client.on('message', async msg => {
             let info = ytdl.getInfo(target, {quality: 'highestaudio'}).then((v)=>{
                 let fname = v.videoDetails.title.replace(/[^\w\s]|_/g, "").replace(/\s+/g, " ");
                         ffmpeg(stream)
-                    .audioBitrate(info.formats[0].audioBitrate)
+                    .audioBitrate(v.formats[0].audioBitrate)
                     .save(`./${fname}.mp3`)
                     .on('end', () => {
                         console.log(`\ndone`);
                         let media = MessageMedia.fromFilePath(`./${fname}.mp3`)
                         if (msg.body.startsWith('-d'))
-                            msg.reply(media,{sendMediaAsDocument: true})   //CHANGE NUMBER HERE
+                            msg.reply(media,msg.from,{sendMediaAsDocument: true})   //CHANGE NUMBER HERE
                         else
-                            msg.reply(media,{sendMediaAsAudio: true})   //CHANGE NUMBER HERE
+                            msg.reply(media,msg.from,{sendMediaAsAudio: true})   //CHANGE NUMBER HERE
                         fs.unlink(`./${fname}.mp3`, (err) => {
                             if (err) {
                             console.error(err)
@@ -249,12 +249,12 @@ client.on('message', async msg => {
                 let info = ytdl.getInfo(qmsg.body, {quality: 'highestaudio'}).then((v)=>{
                     let fname = v.videoDetails.title.replace(/[^\w\s]|_/g, "").replace(/\s+/g, " ");
                             ffmpeg(stream)
-                        .audioBitrate(info.formats[0].audioBitrate)
+                        .audioBitrate(v.formats[0].audioBitrate)
                         .save(`./${fname}.mp3`)
                         .on('end', () => {
                             console.log(`\ndone`);
                             let media = MessageMedia.fromFilePath(`./${fname}.mp3`)
-                            msg.reply(media,{sendMediaAsDocument: true})   //CHANGE NUMBER HERE
+                            msg.reply(media,msg.from,{sendMediaAsDocument: true})   //CHANGE NUMBER HERE
                             fs.unlink(`./${fname}.mp3`, (err) => {
                                 if (err) {
                                 console.error(err)

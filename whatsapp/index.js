@@ -3,7 +3,6 @@ const { Client, LocalAuth, MessageMedia} = require('whatsapp-web.js');
 var app = require("express")();
 var http = require('http').Server(app);
 var bodyParser = require('body-parser');
-const { Pool } = require('pg');
 const regexp = /(@\d{12} )?(.*):(.*)/;
 const fs = require('fs');
 const ytdl = require('ytdl-core');
@@ -11,12 +10,6 @@ const ytsr = require('ytsr');
 const ffmpeg = require('fluent-ffmpeg');
 const { GroupChat } = require('whatsapp-web.js/src/structures');
 
-
-var dburl = process.env.DATABASE_URL;
-const pool = new Pool({
-    connectionString: dburl,
-    ssl: { rejectUnauthorized: false }
-  });
 
 app.use(bodyParser.json())
 app.post('/', function (req, res) {
@@ -135,47 +128,14 @@ client.on('message', async msg => {
         }
     }
 
-    else if (msg.hasQuotedMsg && msg.body.endsWith("*")) {
-        const quotedMsg = await msg.getQuotedMessage();
-        if (quotedMsg.fromMe){
-            if (quotedMsg.body.startsWith("Marked ")){
-                let coursename = quotedMsg.body.slice(7);
-                let nickname = msg.body.slice(0, -1);
-                pool.connect(function(err, client, done) {
-                    client.query("UPDATE courses SET course=$1 WHERE course=$2", [nickname, coursename], function(err, result) {
-                    });
-                    done();
-                });
-                await msg.reply("Ok sir ;)");
-            }
-            else if (quotedMsg.body.startsWith("Failed to mark ")) {
-                let coursename = quotedMsg.body.slice(15);
-                let nickname = msg.body.slice(0, -1);
-                pool.connect(function(err, client, done) {
-                    client.query("UPDATE courses SET course=$1 WHERE course=$2", [nickname, coursename], function(err, result) {
-                    });
-                    done();
-                });
-                await msg.reply("Ok sir ;)");
-            }
-            else if (quotedMsg.body.startsWith("Join ")) {
-                let coursename = quotedMsg.body.slice(5, quotedMsg.body.indexOf('https')-1);
-                let nickname = msg.body.slice(0, -1);
-                pool.connect(function(err, client, done) {
-                    client.query("UPDATE courses SET course=$1 WHERE course=$2", [nickname, coursename], function(err, result) {
-                    });
-                    done();
-                });
-                await msg.reply("Ok sir ;)");
-            }
-        }
-    }
     else if(msg.body.includes("-help")){
         let helptext = `Know what you wish for:
-        \n1. Send an image and I shall make a sticker for you with lub♥️ (specify author:stickername in the image caption to make the sticker with that data)
-        \n2. Send a youtube link and I shall send you the converted audio.
-        \n3. Send me a message in the format "-c <number>" and I shall send you a vcard, so you dont have to save the number ;)
-        \n4. Add me to a group, make me an admin and send a message to the group in the format "-a <number>" to add the number to the group.
+        \n1. Send an image/video/gif and I'll make a sticker for you with lub♥️ (specify author:stickername in the image caption to make the sticker with that data)
+        \n2. Send a youtube link and I'll send you the converted audio.
+        \n3. Send me a message in the format -p <query> and I'll scour youtube and send you the audio of the first result.
+        \n4. Send me a message in the format -d <query> and I'll scour on youtube and send you the first result audio as a document.
+        \n5. Send me a message in the format "-c <number>" and I shall send you a vcard, so you dont have to save the number ;)
+        \n6. Add me to a group, make me an admin and send a message to the group in the format "-a <number>" to add the number to the group.
         `
         await msg.reply(helptext)
     }
@@ -221,7 +181,7 @@ client.on('message', async msg => {
             
         }
     }
-    else if (msg.body.startsWith("-p")){
+    else if (msg.body.startsWith("-p") || msg.body.startsWith("-d")) {
         let query = msg.body.slice(3,);
         const f1 = await ytsr.getFilters(query);
         const f2 = f1.get('Type').get('Video');
@@ -237,7 +197,10 @@ client.on('message', async msg => {
                     .on('end', () => {
                         console.log(`\ndone`);
                         let media = MessageMedia.fromFilePath(`./${fname}.mp3`)
-                        client.sendMessage(msg.from,media,{sendMediaAsDocument: true})   //CHANGE NUMBER HERE
+                        if (msg.body.startsWith('-d'))
+                            client.sendMessage(msg.from,media,{sendMediaAsDocument: true})   //CHANGE NUMBER HERE
+                        else
+                            client.sendMessage(msg.from,media,{sendMediaAsAudio: true})   //CHANGE NUMBER HERE
                         fs.unlink(`./${fname}.mp3`, (err) => {
                             if (err) {
                             console.error(err)

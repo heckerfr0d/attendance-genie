@@ -32,17 +32,17 @@ const client = new Client({
 });
 
 // Save session values to the file upon successful auth
-client.on('authenticated', () => {
-    console.log('youre in');
-});
+    client.on('authenticated', () => {
+        console.log('youre in');
+    });
 
-client.on('qr', qr => {
-    qrcode.generate(qr, { small: true });
-});
+    client.on('qr', qr => {
+        qrcode.generate(qr, { small: true });
+    });
 
-client.on('ready', () => {
-    console.log('Client is ready!');
-});
+    client.on('ready', () => {
+        console.log('Client is ready!');
+    });
 
 client.on('message', async msg => {
     const chat = await msg.getChat();
@@ -66,15 +66,15 @@ client.on('message', async msg => {
     else if(!chat.isGroup && ytdl.validateURL(msg.body)){
         const sndmedia = (stream) =>{
             let id = ytdl.getURLVideoID(msg.body)
-            let info = ytdl.getInfo(msg.body).then((v)=>{
+            let info = ytdl.getInfo(msg.body, {quality: 'highestaudio'}).then((v)=>{
                 let fname = v.videoDetails.title.replace(/[^\w\s]|_/g, "").replace(/\s+/g, " ");
                         ffmpeg(stream)
-                    .audioBitrate(128)
+                    .audioBitrate(info.formats[0].audioBitrate)
                     .save(`./${fname}.mp3`)
                     .on('end', () => {
                         console.log(`\ndone`);
                         let media = MessageMedia.fromFilePath(`./${fname}.mp3`)
-                        client.sendMessage(msg.from,media,{sendMediaAsDocument: true})   //CHANGE NUMBER HERE
+                        msg.reply(media,{sendMediaAsDocument: true})   //CHANGE NUMBER HERE
                         fs.unlink(`./${fname}.mp3`, (err) => {
                             if (err) {
                             console.error(err)
@@ -86,23 +86,23 @@ client.on('message', async msg => {
         }
         // msg.reply("Started downloading the song. Check after some time ;)")
         let id = ytdl.getURLVideoID(msg.body)
-        let info = await ytdl.getInfo(id);
+        let info = await ytdl.getInfo(id, {quality: 'highestaudio'});
             let audioFormats = ytdl.filterFormats(info.formats, 'audioonly');
             let flag = false
             let tag;
-            for(i in audioFormats){
-                if(parseInt(audioFormats[i].contentLength) <= 98000000){
-                    tag = audioFormats[i].itag;
-                    flag = true
-                    break;
-                }
-            }
+            // for(i in audioFormats){
+            //     if(parseInt(audioFormats[i].contentLength) <= 98000000){
+            //         tag = audioFormats[i].itag;
+            //         flag = true
+            //         break;
+            //     }
+            // }
             if(!flag){
                 msg.reply("File toooo large :(")
             }
             else{
                 let stream = ytdl(id, {
-                    quality: tag,
+                    quality: 'highestaudio',
                   });
         
                 if(stream){
@@ -189,18 +189,18 @@ client.on('message', async msg => {
         let target = searchResults.items[0].url;
         const sndmedia = (stream) =>{
             let id = ytdl.getURLVideoID(target)
-            let info = ytdl.getInfo(target).then((v)=>{
+            let info = ytdl.getInfo(target, {quality: 'highestaudio'}).then((v)=>{
                 let fname = v.videoDetails.title.replace(/[^\w\s]|_/g, "").replace(/\s+/g, " ");
                         ffmpeg(stream)
-                    .audioBitrate(128)
+                    .audioBitrate(info.formats[0].audioBitrate)
                     .save(`./${fname}.mp3`)
                     .on('end', () => {
                         console.log(`\ndone`);
                         let media = MessageMedia.fromFilePath(`./${fname}.mp3`)
                         if (msg.body.startsWith('-d'))
-                            client.sendMessage(msg.from,media,{sendMediaAsDocument: true})   //CHANGE NUMBER HERE
+                            msg.reply(media,{sendMediaAsDocument: true})   //CHANGE NUMBER HERE
                         else
-                            client.sendMessage(msg.from,media,{sendMediaAsAudio: true})   //CHANGE NUMBER HERE
+                            msg.reply(media,{sendMediaAsAudio: true})   //CHANGE NUMBER HERE
                         fs.unlink(`./${fname}.mp3`, (err) => {
                             if (err) {
                             console.error(err)
@@ -212,24 +212,24 @@ client.on('message', async msg => {
         }
         // msg.reply("Started downloading the song. Check after some time ;)")
         let id = ytdl.getURLVideoID(target)
-        let info = await ytdl.getInfo(id);
+        let info = await ytdl.getInfo(id, {quality: 'highestaudio'});
         let audioFormats = ytdl.filterFormats(info.formats, 'audioonly');
         let flag = false
         let tag;
-        for(i in audioFormats){
-            if(parseInt(audioFormats[i].contentLength) <= 98000000){
-                console.log(audioFormats[i].itag)
-                tag = audioFormats[i].itag;
-                flag = true
-                break;
-            }
-        }
+        // for(i in audioFormats){
+        //     if(parseInt(audioFormats[i].contentLength) <= 98000000){
+        //         console.log(audioFormats[i].itag)
+        //         tag = audioFormats[i].itag;
+        //         flag = true
+        //         break;
+        //     }
+        // }
         if(!flag){
             msg.reply("File toooo large :(")
         }
         else{
             let stream = ytdl(id, {
-                quality: tag,
+                quality: 'highestaudio',
               });
     
             if(stream){
@@ -246,15 +246,15 @@ client.on('message', async msg => {
         if(ytdl.validateURL(qmsg.body)){
             const sndmedia = (stream) =>{
                 let id = ytdl.getURLVideoID(qmsg.body)
-                let info = ytdl.getInfo(qmsg.body).then((v)=>{
+                let info = ytdl.getInfo(qmsg.body, {quality: 'highestaudio'}).then((v)=>{
                     let fname = v.videoDetails.title.replace(/[^\w\s]|_/g, "").replace(/\s+/g, " ");
                             ffmpeg(stream)
-                        .audioBitrate(128)
+                        .audioBitrate(info.formats[0].audioBitrate)
                         .save(`./${fname}.mp3`)
                         .on('end', () => {
                             console.log(`\ndone`);
                             let media = MessageMedia.fromFilePath(`./${fname}.mp3`)
-                            client.sendMessage(msg.from,media,{sendMediaAsDocument: true})   //CHANGE NUMBER HERE
+                            msg.reply(media,{sendMediaAsDocument: true})   //CHANGE NUMBER HERE
                             fs.unlink(`./${fname}.mp3`, (err) => {
                                 if (err) {
                                 console.error(err)
@@ -266,24 +266,24 @@ client.on('message', async msg => {
             }
             // msg.reply("Started downloading the song. Check after some time ;)")
             let id = ytdl.getURLVideoID(qmsg.body)
-            let info = await ytdl.getInfo(id);
+            let info = await ytdl.getInfo(id, {quality: 'highestaudio'});
             let audioFormats = ytdl.filterFormats(info.formats, 'audioonly');
             let flag = false
             let tag;
-            for(i in audioFormats){
-                if(parseInt(audioFormats[i].contentLength) <= 98000000){
-                    console.log(audioFormats[i].itag)
-                    tag = audioFormats[i].itag;
-                    flag = true
-                    break;
-                }
-            }
+            // for(i in audioFormats){
+            //     if(parseInt(audioFormats[i].contentLength) <= 98000000){
+            //         console.log(audioFormats[i].itag)
+            //         tag = audioFormats[i].itag;
+            //         flag = true
+            //         break;
+            //     }
+            // }
             if(!flag){
                 msg.reply("File toooo large :(")
             }
             else{
                 let stream = ytdl(id, {
-                    quality: tag,
+                    quality: 'highestaudio',
                   });
         
                 if(stream){

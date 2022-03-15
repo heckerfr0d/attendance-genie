@@ -16,6 +16,7 @@
     "pg": "^8.7.1",
     "qrcode-terminal": "^0.12.0",
     "whatsapp-web.js": "^1.16.2",
-    "ytdl-core": "^4.10.1"
+    "ytdl-core": "^4.10.1",
+    "ytsr": "^3.6.0"
   }
 }

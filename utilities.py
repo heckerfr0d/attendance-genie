@@ -26,7 +26,7 @@ async def login(session, username, password):
     return session
 
 # check if u get redirected to login lol
-async def expired(session):
+async def isExpired(session):
     async with session.get(home) as resp:
         return "login" in str(resp.url)
 
@@ -45,15 +45,15 @@ async def get_session(username, password):
         session.cookie_jar.load(cookiejar)
 
     # bad cookie
-    if (await expired(session)):
+    if (await isExpired(session)):
         session = await login(session, username, password)
         session.cookie_jar.save(cookiejar)
 
     # login failed
-    if (await expired(session)):
+    if (await isExpired(session)):
         session = await login(session, username, password)
         session.cookie_jar.save(cookiejar)
-        if (await expired(session)):
+        if (await isExpired(session)):
             await session.close()
             return None
 

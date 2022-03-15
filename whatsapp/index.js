@@ -7,6 +7,7 @@ const { Pool } = require('pg');
 const regexp = /(@\d{12} )?(.*):(.*)/;
 const fs = require('fs');
 const ytdl = require('ytdl-core');
+const ytsr = require('ytsr');
 const ffmpeg = require('fluent-ffmpeg');
 const { GroupChat } = require('whatsapp-web.js/src/structures');
 
@@ -120,7 +121,7 @@ client.on('message', async msg => {
             }
             
     }
-    else if (msg.hasMedia && msg.hasQuotedMsg && msg.mentionedIds.includes('971507574782@c.us')) {
+    else if (msg.hasQuotedMsg && (await msg.getQuotedMessage()).hasMedia && msg.mentionedIds.includes('971507574782@c.us')) {
         const quotedMsg = await msg.getQuotedMessage();
         const media = await quotedMsg.downloadMedia();
         if(media.mimetype && (media.mimetype.includes("image") || media.mimetype.includes("video"))){       //Make a sticker only if its an image
@@ -218,6 +219,62 @@ client.on('message', async msg => {
             grp = new GroupChat(client,chat)
             grp.addParticipants([num+'@c.us'])
             
+        }
+    }
+    else if (msg.body.startsWith("-p")){
+        let query = msg.body.slice(3,);
+        const f1 = await ytsr.getFilters(query);
+        const f2 = f1.get('Type').get('Video');
+        const searchResults = await ytsr(f2.url);
+        let target = searchResults.items[0].url;
+        const sndmedia = (stream) =>{
+            let id = ytdl.getURLVideoID(target)
+            let info = ytdl.getInfo(target).then((v)=>{
+                let fname = v.videoDetails.title.replace(/[^\w\s]|_/g, "").replace(/\s+/g, " ");
+                        ffmpeg(stream)
+                    .audioBitrate(128)
+                    .save(`./${fname}.mp3`)
+                    .on('end', () => {
+                        console.log(`\ndone`);
+                        let media = MessageMedia.fromFilePath(`./${fname}.mp3`)
+                        client.sendMessage(msg.from,media,{sendMediaAsDocument: true})   //CHANGE NUMBER HERE
+                        fs.unlink(`./${fname}.mp3`, (err) => {
+                            if (err) {
+                            console.error(err)
+                            return
+                            }})
+                    }); 
+                })
+              
+        }
+        // msg.reply("Started downloading the song. Check after some time ;)")
+        let id = ytdl.getURLVideoID(target)
+        let info = await ytdl.getInfo(id);
+        let audioFormats = ytdl.filterFormats(info.formats, 'audioonly');
+        let flag = false
+        let tag;
+        for(i in audioFormats){
+            if(parseInt(audioFormats[i].contentLength) <= 98000000){
+                console.log(audioFormats[i].itag)
+                tag = audioFormats[i].itag;
+                flag = true
+                break;
+            }
+        }
+        if(!flag){
+            msg.reply("File toooo large :(")
+        }
+        else{
+            let stream = ytdl(id, {
+                quality: tag,
+              });
+    
+            if(stream){
+                sndmedia(stream)
+            }
+            else{
+                msg.reply("Sorry master. I am busy doing dishes :( Please try again after some time.")
+            }
         }
     }
     // If the chat is a group, send

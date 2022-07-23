@@ -1,7 +1,7 @@
 {
-  "name": "whatsapp",
+  "name": "genie",
   "version": "1.0.0",
-  "description": "Genie's extension for WhatsApp announcements",
+  "description": "Friendly neighborhood Genie",
   "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
@@ -9,10 +9,8 @@
   "author": "heckerfr0d",
   "license": "ISC",
   "dependencies": {
-    "body-parser": "^1.19.1",
-    "express": "^4.17.2",
+    "better-sqlite3": "^7.6.1",
     "fluent-ffmpeg": "^2.1.2",
-    "http": "^0.0.1-security",
     "pg": "^8.7.1",
     "qrcode-terminal": "^0.12.0",
     "whatsapp-web.js": "^1.16.2",

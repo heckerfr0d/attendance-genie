@@ -1,0 +1,20 @@
+[Unit]
+Description=Genie Frontend
+DefaultDependencies=no
+After=network.target
+
+[Service]
+User=genie
+Group=genie
+Environment="PATH=/var/www/attendance-genie.ml/.env/bin"
+Environment="WEBHOOK="
+Environment="DATABASE_URL="
+Environment="SECRET_KEY="
+WorkingDirectory=/var/www/attendance-genie.ml
+ExecStart=/var/www/attendance-genie.ml/.env/bin/gunicorn --workers 2 --threads 2 --bind unix:/var/www/attendance-genie.ml/attendance-genie.sock wsgi:app
+TimeoutStartSec=0
+Restart=always
+RestartSec=10
+
+[Install]
+WantedBy=network.target
